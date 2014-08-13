@@ -1,0 +1,53 @@
+<Module>
+
+	<Enums>
+    
+        <UrlType>
+            <Ipv4/>
+            <Ipv6/>
+            <hostname/>
+            <any/>
+        </UrlType>
+        
+	</Enums>
+    
+	<Types>
+    
+        <MnetPublicType>
+    
+        <NetworkAddress extends="MnetPublicType">
+            <url type="string"/>
+            <urlType type="UrlType"/>
+        </NetworkAddress>
+    
+        <NetworkId extends="MnetPublicType">
+            <lsb type="int64"/>
+            <msb type="int64"/>
+        </NetworkId>
+        
+        <NetworkIfc extends="MnetPublicType">
+            <discoveredBackendNodes type="list[BackendNodeHandle]" flags="polymorphic, transient"/>
+        </NetworkIfc>
+            
+        <BackendNodeHandle extends="MnetPublicType">
+            <nodeId type="NetworkId"/>
+            <discoveredClients type="list[ClientHandle]" flags="polymorphic, transient"/>
+            <address type="NetworkAddress"/>
+        </BackendNodeHandle>
+    
+		<ClientHandle extends="MnetPublicType">
+			<clientId type="NetworkId"/>
+            <parentNodeId type="NetworkId"/>
+            <discoveredServices type="list[ServiceDescription]" flags="polymorphic"/>
+            <address type="NetworkAddress"/>
+		</ClientHandle>
+        
+        <ServiceDescription extends="MnetPublicType">
+            <serviceName type="string"/>
+            <description type="string"/>
+            <tags type="list[string]"/>
+        </ServiceDescription>
+        
+	</Types>
+    
+</Module>
