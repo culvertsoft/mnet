@@ -1,6 +1,6 @@
 <Module>
 
-	<Enums>
+    <Enums>
     
         <UrlType>
             <Ipv4/>
@@ -9,9 +9,9 @@
             <any/>
         </UrlType>
         
-	</Enums>
+    </Enums>
     
-	<Types>
+    <Types>
     
         <MNetPublicType/>
     
@@ -35,12 +35,12 @@
             <address type="NetworkAddress"/>
         </BackendNodeHandle>
     
-		<ClientHandle extends="MNetPublicType">
-			<clientId type="NetworkId"/>
+        <ClientHandle extends="MNetPublicType">
+            <clientId type="NetworkId"/>
             <parentNodeId type="NetworkId"/>
             <discoveredServices type="list[ServiceDescription]" flags="polymorphic"/>
             <address type="NetworkAddress"/>
-		</ClientHandle>
+        </ClientHandle>
         
         <ServiceDescription extends="MNetPublicType">
             <serviceName type="string"/>
@@ -48,6 +48,6 @@
             <tags type="list[string]"/>
         </ServiceDescription>
         
-	</Types>
+    </Types>
     
 </Module>

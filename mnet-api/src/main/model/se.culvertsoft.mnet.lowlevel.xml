@@ -1,7 +1,7 @@
 <Module>
-	<Enums>
-	</Enums>
-	<Types>
+    <Enums>
+    </Enums>
+    <Types>
     
         <LowlevelMessage>
             <senderId type="se.culvertsoft.mnet.NetworkId"/>
@@ -41,5 +41,5 @@
             <mayDiscard type="bool"/>
         </UserDataMessage>
         
-	</Types>
+    </Types>
 </Module>
