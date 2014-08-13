@@ -7,6 +7,8 @@ MNet will be a data format- and programming language agnostic software network i
 
 MNet will allow you to connect your client applications to a persistent network of nodes and other clients (=service providers). When connected you may register services and query available services on the network, as well as sending custom messages (byte arrays) to all of or a subset currently connected clients.
 
+It can also be used a simple server-client skeleton for you to manage, for example for game servers and similar applications.
+
 MNet can be seen as a follow-up and sister product of [mgen](https://github.com/culvertsoft/mgen), and will follow MGen's dual licensing model of GPLv2 + a future license that is more commercially compatible.
 
 MNet will have NO requirements for you to use MGen as the data format, as they are two completely separate projects.
