@@ -7,6 +7,7 @@
     
         <BackendConfiguration>
             <port type="int"/>
+            <remoteNodes type="list[string]"/>            
             <!-- Not yet implemented (all below) -->
             <listeningInterfaces type="list[string]"/>
             <maxClients type="int"/>
