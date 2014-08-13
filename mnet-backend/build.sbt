@@ -9,6 +9,8 @@ isSnapshot := version.value.contains("SNAPSHOT")
 
 crossPaths := false
 
+unmanagedSourceDirectories in Compile += baseDirectory.value / "src_generated/main/java"
+
 libraryDependencies += "se.culvertsoft" % "mnet-api" % version.value
 
 libraryDependencies += "com.novocode" % "junit-interface" % "0.10" % Test

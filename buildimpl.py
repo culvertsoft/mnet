@@ -6,11 +6,12 @@ from buildutil import *
 ###########
 
 def clean():
+    rmFolders(".", "src_generated")
     sbt_clean(".")
     #TODO: clean cppclient
     
 def build():
-    generate_network_model()
+    generate_models()
     build_java_and_scala()
 
 def test():
@@ -34,8 +35,9 @@ def compile3(workingDir, project, outPath):
 def compile(workingDir, project):
     compile3(workingDir, project, ".")
 
-def generate_network_model():
+def generate_models():
     check_call("mgen src/main/model/project.xml", cwd="mnet-api", shell=True)
+    check_call("mgen src/main/model/project.xml", cwd="mnet-backend", shell=True)
     
 def build_java_and_scala():
     sbt(".",   ('"project mnet_api" publish-local '

@@ -13,6 +13,8 @@ unmanagedSourceDirectories in Compile += baseDirectory.value / "src_generated/ma
 
 libraryDependencies += "se.culvertsoft" % "mgen-javalib" % version.value
 
+libraryDependencies += "org.java-websocket" % "Java-WebSocket" % "1.3.0"
+
 libraryDependencies += "com.novocode" % "junit-interface" % "0.10" % Test
 
 EclipseKeys.withSource := true
