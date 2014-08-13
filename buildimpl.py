@@ -10,6 +10,7 @@ def clean():
     #TODO: clean cppclient
     
 def build():
+    generate_network_model()
     build_java_and_scala()
 
 def test():
@@ -33,6 +34,9 @@ def compile3(workingDir, project, outPath):
 def compile(workingDir, project):
     compile3(workingDir, project, ".")
 
+def generate_network_model():
+    check_call("mgen src/main/model/project.xml", cwd="mnet-api", shell=True)
+    
 def build_java_and_scala():
     sbt(".",   ('"project mnet_api" publish-local '
                 '"project mnet_backend" publish-local '

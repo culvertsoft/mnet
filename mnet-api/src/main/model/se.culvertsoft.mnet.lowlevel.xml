@@ -8,10 +8,10 @@
             <targetId type="se.culvertsoft.mnet.NetworkId"/>
             <hops type="int8"/>
             <maxHops type="int8"/>
-            <filter type="LowlevelFilter"/>
+            <filter type="LowlevelFilter" flags="polymorphic"/>
         </LowlevelMessage>
         
-        <LowlevelFilter>
+        <LowlevelFilter/>
         
         <HeartBeat extends="LowlevelMessage"/>
         
@@ -36,7 +36,7 @@
             <services type="list[se.culvertsoft.mnet.ServiceDescription]" flags="polymorphic"/>
         </BackendNodeDetailsReply>        
         
-        <UserDataMessage extends="LowlevelMessage"/>
+        <UserDataMessage extends="LowlevelMessage">
             <data type="array[int8]"/>
             <mayDiscard type="bool"/>
         </UserDataMessage>

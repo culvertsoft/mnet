@@ -13,36 +13,36 @@
     
 	<Types>
     
-        <MnetPublicType>
+        <MNetPublicType/>
     
-        <NetworkAddress extends="MnetPublicType">
+        <NetworkAddress extends="MNetPublicType">
             <url type="string"/>
             <urlType type="UrlType"/>
         </NetworkAddress>
     
-        <NetworkId extends="MnetPublicType">
+        <NetworkId extends="MNetPublicType">
             <lsb type="int64"/>
             <msb type="int64"/>
         </NetworkId>
         
-        <NetworkIfc extends="MnetPublicType">
+        <NetworkIfc extends="MNetPublicType">
             <discoveredBackendNodes type="list[BackendNodeHandle]" flags="polymorphic, transient"/>
         </NetworkIfc>
             
-        <BackendNodeHandle extends="MnetPublicType">
+        <BackendNodeHandle extends="MNetPublicType">
             <nodeId type="NetworkId"/>
             <discoveredClients type="list[ClientHandle]" flags="polymorphic, transient"/>
             <address type="NetworkAddress"/>
         </BackendNodeHandle>
     
-		<ClientHandle extends="MnetPublicType">
+		<ClientHandle extends="MNetPublicType">
 			<clientId type="NetworkId"/>
             <parentNodeId type="NetworkId"/>
             <discoveredServices type="list[ServiceDescription]" flags="polymorphic"/>
             <address type="NetworkAddress"/>
 		</ClientHandle>
         
-        <ServiceDescription extends="MnetPublicType">
+        <ServiceDescription extends="MNetPublicType">
             <serviceName type="string"/>
             <description type="string"/>
             <tags type="list[string]"/>
