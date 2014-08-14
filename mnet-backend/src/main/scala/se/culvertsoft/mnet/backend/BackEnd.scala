@@ -3,70 +3,75 @@ package se.culvertsoft.mnet.backend
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 
+import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.mutable.ArrayBuffer
 
 import org.java_websocket.WebSocket
 import org.java_websocket.handshake.ClientHandshake
 
-object BackEnd {
-
-  val DEFAULT_PORT = 6537
-
-  def main(args: Array[String]) {
-    //TODO: Parse args...maybe just a config file name?
-    val settings = new BackendConfiguration
-    new BackEnd(settings).start()
-  }
-
-}
-
 class BackEnd(settings: BackendConfiguration) {
-  val port = if (settings.hasPort) settings.getPort else BackEnd.DEFAULT_PORT
-  val servers = new ArrayBuffer[Server]
+
+  val port = settings.getPort()
+  val listeningIfcs = new ArrayBuffer[ListeningIfc]
+  val outboundNodes = new ArrayBuffer[OutboundNode]
+  val inboundNodes = new ArrayBuffer[InboundNode]
+  val clients = new ArrayBuffer[Client]
+  val pending = new ArrayBuffer[WebSocket]
 
   def start() {
-    if (servers.nonEmpty)
+    if (listeningIfcs.nonEmpty)
       throw new RuntimeException("Tried to start BackEnd Twice!")
 
     if (settings.hasListeningInterfaces()) {
       ???
     } else {
-      servers += new Server(this, new InetSocketAddress(port))
+      listeningIfcs += new ListeningIfc(this, new InetSocketAddress(port))
     }
 
-    servers.foreach(_.start())
+    listeningIfcs.foreach(_.start())
+
+    for (addr <- settings.getRemoteNodes) {
+      outboundNodes += new OutboundNode(addr, this)
+    }
   }
 
+  /**
+   * **********************************************
+   * These may be called from virtually any thread.
+   * We'll collect all calls here
+   * **********************************************
+   */
+
   def onOpen(
-    server: Server,
+    sourceType: SourceType,
     connection: WebSocket,
-    handshake: ClientHandshake) {
+    handshake: ClientHandshake): Unit = synchronized {
   }
 
   def onClose(
-    server: Server,
+    sourceType: SourceType,
     connection: WebSocket,
     code: Int,
     reason: String,
-    remote: Boolean) {
+    remote: Boolean): Unit = synchronized {
   }
 
   def onMessage(
-    server: Server,
+    sourceType: SourceType,
     connection: WebSocket,
-    message: String) {
+    message: String): Unit = synchronized {
   }
 
   def onMessage(
-    server: Server,
+    sourceType: SourceType,
     connection: WebSocket,
-    message: ByteBuffer) {
+    message: ByteBuffer): Unit = synchronized {
   }
 
   def onError(
-    server: Server,
+    sourceType: SourceType,
     connection: WebSocket,
-    error: Exception) {
+    error: Exception): Unit = synchronized {
   }
 
 }

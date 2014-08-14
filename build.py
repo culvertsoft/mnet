@@ -11,6 +11,7 @@ parser.add_argument("-e", "--eclipse", action='store_true')
 parser.add_argument("-t", "--test", action='store_true')
 parser.add_argument("-a", "--all", help='all except publish (=cbt)', action='store_true')
 parser.add_argument("-d", "--debugscript", action='store_true')
+parser.add_argument("-g", "--generate", action='store_true')
 parser.add_argument("-v", "--version", default="SNAPSHOT")
 args = parser.parse_args()
 
@@ -20,6 +21,7 @@ buildimpl.default_cpp_build_cfg = "RelwithDebInfo" # Because VS is epicly slow i
 
 # Targets 
 if args.clean or args.all: clean() 
+if args.generate: generate_models()
 if args.build or args.all or len(sys.argv) == 1: build()
 if args.test or args.all: test()
 if args.eclipse or args.all: eclipse()

@@ -6,8 +6,11 @@
     <Types>
     
         <BackendConfiguration>
-            <port type="int"/>
-            <remoteNodes type="list[string]"/>            
+            <port type="int">6537</port>
+            <remoteNodes type="list[string]">[]</remoteNodes>
+            <allowOtherNodes type="bool"/>
+            <storeOtherNodes type="bool"/>
+            
             <!-- Not yet implemented (all below) -->
             <listeningInterfaces type="list[string]"/>
             <maxClients type="int"/>
