@@ -43,9 +43,11 @@ class TestBackend {
     val ws = new ReconnectingWebsocket("localhost", b.port).start()
 
     Thread.sleep(500)
+    assert(ws.isConnected)
     ws.close()
     b.close()
     Thread.sleep(100)
+    assert(ws.isDisconnected)
 
   }
 
