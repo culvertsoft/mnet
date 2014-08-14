@@ -12,22 +12,22 @@ class ListeningIfc(
   addr: InetSocketAddress) extends WebSocketServer(addr) {
 
   override def onOpen(conn: WebSocket, handshake: ClientHandshake) {
-    parent.onOpen(SourceNode, conn, handshake)
+    parent.onOpen(this, conn, handshake)
   }
 
   override def onClose(conn: WebSocket, code: Int, reason: String, remote: Boolean) {
-    parent.onClose(SourceNode, conn, code, reason, remote)
+    parent.onClose(this, conn, code, reason, remote)
   }
 
   override def onMessage(conn: WebSocket, message: String) {
-    parent.onMessage(SourceNode, conn, message)
+    parent.onMessage(this, conn, message)
   }
 
   override def onMessage(conn: WebSocket, message: ByteBuffer) {
-    parent.onMessage(SourceNode, conn, message)
+    parent.onMessage(this, conn, message)
   }
 
   override def onError(conn: WebSocket, ex: Exception) {
-    parent.onError(SourceNode, conn, ex)
+    parent.onError(this, conn, ex)
   }
 }

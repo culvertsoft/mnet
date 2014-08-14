@@ -11,6 +11,8 @@ isSnapshot := version.value.contains("SNAPSHOT")
 
 crossPaths := false
 
+parallelExecution in Test := false
+
 lazy val mnet_api = project in file("mnet-api")
 
 lazy val mnet_backend = (project in file("mnet-backend")).dependsOn(mnet_api)

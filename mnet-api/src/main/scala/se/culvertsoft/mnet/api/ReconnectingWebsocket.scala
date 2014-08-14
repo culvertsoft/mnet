@@ -8,8 +8,9 @@ import org.java_websocket.drafts.Draft_10
 import org.java_websocket.handshake.ServerHandshake
 
 class ReconnectingWebsocket(
-  val serverUri: URI,
+  val serverUri: URI = new URI("ws://localhost:80"),
   val timeout: Int = 0) {
+  def this(addr: String, port: Int) = this(new URI(s"ws://$addr:$port"))
 
   /**
    * *********************************
@@ -106,7 +107,7 @@ class ReconnectingWebsocket(
 
   @volatile private var m_currentWebsocket: WebSocketClient = null
   @volatile private var m_forceReconnect = false
-  @volatile private var m_toLive = false
+  @volatile private var m_toLive = true
   @volatile private var m_status: ConnectionStatus = Disconnected
 
   private val m_thread = new Thread {

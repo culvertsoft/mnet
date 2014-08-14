@@ -6,7 +6,7 @@
     <Types>
     
         <BackendConfiguration>
-            <port type="int">6537</port>
+            <port type="int">80</port>
             <remoteNodes type="list[string]">[]</remoteNodes>
             <allowOtherNodes type="bool"/>
             <storeOtherNodes type="bool"/>
