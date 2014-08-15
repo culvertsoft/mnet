@@ -27,7 +27,7 @@ class WebsockOutHandler(
     code: Int,
     reason: String,
     remote: Boolean) {
-    handler.onDisconnect(this, reason)
+    handler.onDisconnect(reason, this)
   }
 
   override def onTextMessage(msg: String) {
@@ -39,7 +39,7 @@ class WebsockOutHandler(
   }
 
   override def onError(error: Exception) {
-    handler.onError(this, error)
+    handler.onError(error, this)
   }
 
   def sendJson(msg: Message) = synchronized {

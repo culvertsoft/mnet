@@ -20,7 +20,7 @@ class WebsockInHandler(
   }
 
   override def onClose(conn: WebSocket, code: Int, reason: String, remote: Boolean) {
-    handler.onDisconnect(conn, reason)
+    handler.onDisconnect(reason, conn)
   }
 
   override def onMessage(conn: WebSocket, jsonMsg: String) {
@@ -32,7 +32,7 @@ class WebsockInHandler(
   }
 
   override def onError(conn: WebSocket, ex: Exception) {
-    handler.onError(conn, ex)
+    handler.onError(ex, conn)
   }
 
   implicit class RichWebSock(socket: WebSocket) extends Connection {

@@ -2,9 +2,9 @@ package se.culvertsoft.mnet.backend
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-
 import se.culvertsoft.mnet.Message
 import se.culvertsoft.mnet.NodeUUID
+import se.culvertsoft.mnet.NodeAnnouncement
 
 class Node(settings: BackendConfiguration)
   extends NodeIfc {
@@ -46,21 +46,23 @@ class Node(settings: BackendConfiguration)
    * ***************************************
    */
 
-  def onConnect(route: Route) {
-    if (!routingTable.contains(route.id))
-      routingTable.put(route.id, route)
+  override def onConnect(msg: NodeAnnouncement, route: Route) {
+    msg.setHops((msg.getHops + 1).toByte)
+    if (!routingTable.contains(route.endpointId))
+      routingTable.put(route.endpointId, route)
+   // broadCast(msg, route.endpointId)
   }
 
-  def onDisconnect(route: Route, reason: String) {
-    if (routingTable.get(route.id) == route)
-      routingTable.remove(route.id)
+  override def onDisconnect(route: Route, reason: String) {
+    if (routingTable.get(route.endpointId) == route)
+      routingTable.remove(route.endpointId)
   }
 
-  def onError(route: Option[Route], error: Exception) {
+  override def onError(error: Exception, endPoint: AnyRef) {
 
   }
 
-  def onMessage(route: Option[Route], message: Message) {
+  override def onMessage(message: Message, route: Option[Route]) {
 
   }
 

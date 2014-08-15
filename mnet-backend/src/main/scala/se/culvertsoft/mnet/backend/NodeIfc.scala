@@ -1,15 +1,16 @@
 package se.culvertsoft.mnet.backend
 
 import se.culvertsoft.mnet.Message
+import se.culvertsoft.mnet.NodeAnnouncement
 
 trait NodeIfc {
 
-  def onConnect(neighbor: Route)
+  def onConnect(msg: NodeAnnouncement, route: Route)
 
-  def onDisconnect(neighbor: Route, reason: String)
+  def onDisconnect(route: Route, reason: String)
 
-  def onError(neighbor: Option[Route], error: Exception)
+  def onError(error: Exception, endPoint: AnyRef)
 
-  def onMessage(neighbor: Option[Route], message: Message)
+  def onMessage(message: Message, route: Option[Route])
 
 }
