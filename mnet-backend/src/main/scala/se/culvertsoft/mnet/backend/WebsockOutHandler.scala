@@ -9,8 +9,9 @@ import se.culvertsoft.mnet.api.ReconnectingWebsocket
 class WebsockOutHandler(
   backEnd: NodeCallbackIfc,
   uri: URI,
+  useTcpNoDelay: Boolean,
   timeout: Int)
-  extends ReconnectingWebsocket(uri, timeout)
+  extends ReconnectingWebsocket(uri, useTcpNoDelay, timeout)
   with Connection {
 
   private val serializer = new WebsockSerializer

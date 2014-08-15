@@ -28,10 +28,10 @@ class WebSockProvider(_settings: BackendConfiguration) extends RouteProvider {
     backEnd = _backEnd
 
     if (settings.hasListenPort())
-      listeningIfcs += new WebsockInHandler(backEnd, new InetSocketAddress(settings.getListenPort()))
+      listeningIfcs += new WebsockInHandler(backEnd, new InetSocketAddress(settings.getListenPort), settings.getUseTcpNodelay)
 
     for (addr <- settings.getConnectTo)
-      connectingTo += new WebsockOutHandler(backEnd, new URI(addr), 0)
+      connectingTo += new WebsockOutHandler(backEnd, new URI(addr), settings.getUseTcpNodelay(), 0)
 
     listeningIfcs.foreach(_.start())
     connectingTo.foreach(_.start())
@@ -49,7 +49,7 @@ class WebSockProvider(_settings: BackendConfiguration) extends RouteProvider {
 
   def addOutboundConnection(uri: String) {
     if (backEnd != null) {
-      val handler = new WebsockOutHandler(backEnd, new URI(uri), 0)
+      val handler = new WebsockOutHandler(backEnd, new URI(uri), settings.getUseTcpNodelay(), 0)
       connectingTo += handler
       handler.start()
     } else {

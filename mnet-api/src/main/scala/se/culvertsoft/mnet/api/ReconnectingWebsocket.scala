@@ -1,14 +1,23 @@
 package se.culvertsoft.mnet.api
 
+import java.net.Socket
 import java.net.URI
 import java.nio.ByteBuffer
+import java.nio.channels.ByteChannel
+import java.nio.channels.SelectionKey
+import java.nio.channels.SocketChannel
 
+import org.java_websocket.WebSocket
+import org.java_websocket.WebSocketAdapter
+import org.java_websocket.client.DefaultWebSocketClientFactory
 import org.java_websocket.client.WebSocketClient
+import org.java_websocket.drafts.Draft
 import org.java_websocket.drafts.Draft_10
 import org.java_websocket.handshake.ServerHandshake
 
 class ReconnectingWebsocket(
   val serverUri: URI = new URI("ws://localhost:80"),
+  val useTcpNoDelay: Boolean = true,
   val timeout: Int = 0) {
   def this(addr: String, port: Int) = this(new URI(s"ws://$addr:$port"))
 
@@ -133,6 +142,29 @@ class ReconnectingWebsocket(
 
     m_status = Connecting
     m_currentWebsocket = new WebSocketClient(serverUri, new Draft_10, null, timeout) {
+
+      if (useTcpNoDelay) {
+        setWebSocketFactory(new DefaultWebSocketClientFactory(this) {
+
+          override def createWebSocket(a: WebSocketAdapter, d: Draft, s: Socket): WebSocket = {
+            if (s != null)
+              s.setTcpNoDelay(true)
+            super.createWebSocket(a, d, s)
+          }
+
+          override def createWebSocket(a: WebSocketAdapter, d: java.util.List[Draft], s: Socket): WebSocket = {
+            if (s != null)
+              s.setTcpNoDelay(true)
+            super.createWebSocket(a, d, s)
+          }
+
+          override def wrapChannel(channel: SocketChannel, c: SelectionKey, host: String, port: Int): ByteChannel = {
+            if (channel != null && channel.socket != null)
+              channel.socket.setTcpNoDelay(true)
+            super.wrapChannel(channel, c, host, port)
+          }
+        })
+      }
 
       override def onOpen(handshakedata: ServerHandshake) {
         m_status = Connected
