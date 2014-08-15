@@ -4,50 +4,21 @@ import scala.collection.mutable.ArrayBuffer
 
 import org.junit.Test
 
+import TestUtils.getTime
+import TestUtils.serializer
 import se.culvertsoft.mnet.api.ReconnectingWebsocket
-import se.culvertsoft.mnet.backend.BackendConfiguration
-import se.culvertsoft.mnet.backend.Node
-import se.culvertsoft.mnet.backend.Route
 import se.culvertsoft.mnet.backend.WebSockProvider
-import se.culvertsoft.mnet.backend.WebsockSerializer
 
-object TestBackend {
-
-  val serializer = new WebsockSerializer
-
-  private var testPort = 80
-  def getTestPort(): Int = synchronized {
-    val out = testPort
-    testPort += 1
-    out
-  }
-
-  def getTestCfg(): BackendConfiguration = {
-    new BackendConfiguration().setListenPort(getTestPort)
-  }
-
-  def newNode(msgHandler: Message => Unit = _ => Unit): Node = {
-    val settings = getTestCfg
-    new Node() {
-      override def handleMessage(message: Message, route: Option[Route]) {
-        msgHandler(message)
-      }
-    }.addRouteProvider(new WebSockProvider(settings))
-  }
-
-}
-
-class TestBackend {
-  import TestBackend._
+class BasicTests {
 
   @Test
   def canCreateNode() {
-    val b = TestBackend.newNode()
+    val b = TestUtils.newNode()
   }
 
   @Test
   def canCloseBackend() {
-    val b = TestBackend.newNode().start()
+    val b = TestUtils.newNode().start()
     Thread.sleep(100)
     b.stop()
     Thread.sleep(100)
@@ -56,7 +27,7 @@ class TestBackend {
   @Test
   def canConnectToBackend() {
 
-    val b = TestBackend.newNode().start()
+    val b = TestUtils.newNode().start()
     val port = b.getProvider[WebSockProvider].listenPort
 
     @volatile var gotMsg: Message = null
@@ -80,8 +51,8 @@ class TestBackend {
   @Test
   def canAnnounceOnBackend() {
 
-    val b1 = TestBackend.newNode().start()
-    val b2 = TestBackend.newNode().start()
+    val b1 = TestUtils.newNode().start()
+    val b2 = TestUtils.newNode().start()
 
     val ws1 = b1.getProvider[WebSockProvider]
     val ws2 = b2.getProvider[WebSockProvider]
@@ -106,8 +77,8 @@ class TestBackend {
     val b1Msgs = new ArrayBuffer[Message]
     val b2Msgs = new ArrayBuffer[Message]
 
-    val b1 = TestBackend.newNode(b1Msgs += _).start()
-    val b2 = TestBackend.newNode(b2Msgs += _).start()
+    val b1 = TestUtils.newNode(b1Msgs += _).start()
+    val b2 = TestUtils.newNode(b2Msgs += _).start()
 
     val ws1 = b1.getProvider[WebSockProvider]
     val ws2 = b2.getProvider[WebSockProvider]
@@ -137,4 +108,46 @@ class TestBackend {
 
   }
 
+  @Test
+  def latencyCheck() {
+
+    val b1Msgs = new ArrayBuffer[Message]
+    val b2Msgs = new ArrayBuffer[Message]
+
+    val b1 = TestUtils.newNode(b1Msgs += _).start()
+    val b2 = TestUtils.newNode(b2Msgs += _).start()
+
+    val ws1 = b1.getProvider[WebSockProvider]
+    val ws2 = b2.getProvider[WebSockProvider]
+
+    Thread.sleep(100)
+
+    assert(b1.viewRoutes.isEmpty)
+    assert(b2.viewRoutes.isEmpty)
+
+    ws1.addOutboundConnection(ws2.listenPort)
+
+    Thread.sleep(100)
+
+    assert(b1.viewRoutes.nonEmpty)
+    assert(b2.viewRoutes.nonEmpty)
+
+    val errMsgSentByB1 = new ErrorMessage().setMsg("ErrorFromB1")
+    val errMsgSentByB2 = new ErrorMessage().setMsg("ErrorFromB2")
+
+    val t0 = getTime
+    def dt() = getTime - t0
+    b1.broadcastJson(errMsgSentByB1)
+    b2.broadcastJson(errMsgSentByB2)
+
+    while (b1Msgs.isEmpty && dt < 1.0) {}
+
+    println(getTime - t0)
+
+    Thread.sleep(100)
+
+    assert(b1Msgs.size == 1)
+    assert(b2Msgs.size == 1)
+
+  }
 }
