@@ -10,7 +10,7 @@ class WebSockProvider(_settings: BackendConfiguration) extends RouteProvider {
   val settings = _settings.deepCopy()
 
   // Kept so we can close them (they have slave threads)
-  private var backEnd: NodeIfc = null
+  private var backEnd: NodeCallbackIfc = null
   private val listeningIfcs = new ArrayBuffer[WebsockInHandler]
   private val connectingTo = new ArrayBuffer[WebsockOutHandler]
 
@@ -22,7 +22,7 @@ class WebSockProvider(_settings: BackendConfiguration) extends RouteProvider {
    * ***************************************
    */
 
-  override def start(_backEnd: NodeIfc) {
+  override def start(_backEnd: NodeCallbackIfc) {
     if (backEnd != null)
       throw new RuntimeException("Tried to start BackEnd Twice!")
     backEnd = _backEnd

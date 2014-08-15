@@ -7,7 +7,7 @@ import se.culvertsoft.mnet.Message
 import se.culvertsoft.mnet.api.ReconnectingWebsocket
 
 class WebsockOutHandler(
-  backEnd: NodeIfc,
+  backEnd: NodeCallbackIfc,
   uri: URI,
   timeout: Int)
   extends ReconnectingWebsocket(uri, timeout)

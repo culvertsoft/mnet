@@ -4,7 +4,7 @@ import se.culvertsoft.mnet.Message
 import se.culvertsoft.mnet.NodeAnnouncement
 import se.culvertsoft.mnet.NodeUUID
 
-trait NodeIfc {
+trait NodeCallbackIfc {
 
   def createAnnouncement(): NodeAnnouncement
   

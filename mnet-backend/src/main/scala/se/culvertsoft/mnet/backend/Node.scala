@@ -13,8 +13,6 @@ import se.culvertsoft.mnet.NodeUUID
 
 class Node {
 
-  println(this + " created")
-  
   val id = MkId()
 
   private val routes: concurrent.Map[NodeUUID, Route] = new ConcurrentHashMap[NodeUUID, Route]
@@ -27,13 +25,17 @@ class Node {
    *
    * ***************************************
    */
-  
-  def getRoutes(): Iterable[Route] = {
-    routes.map(_._2)
+
+  def viewRoutes(): Seq[Route] = {
+    routes.values.toSeq
+  }
+
+  def viewProviders(): Seq[RouteProvider] = {
+    new ArrayBuffer[RouteProvider] ++ routeProviders.toSeq
   }
 
   def start(): Node = {
-    routeProviders.foreach(_.start(nodeIfc))
+    routeProviders.foreach(_.start(callbackIfc))
     this
   }
 
@@ -105,11 +107,10 @@ class Node {
    * ***************************************
    */
 
-  private val nodeIfc = new NodeIfc() {
+  private val callbackIfc = new NodeCallbackIfc() {
 
     override def onConnect(msg: NodeAnnouncement, route: Route) {
       incMsgHops(msg)
-      println(s"adding $msg")
       routes.putIfAbsent(route.endpointId, route)
       broadcastJson(msg, _ != route)
       handleConnect(route)
@@ -132,7 +133,6 @@ class Node {
     }
 
     override def createAnnouncement(): NodeAnnouncement = {
-      println(s"${Node.this} creating announcement")
       new NodeAnnouncement().setSenderId(id)
     }
   }

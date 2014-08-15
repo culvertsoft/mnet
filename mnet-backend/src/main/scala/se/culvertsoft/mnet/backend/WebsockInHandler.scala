@@ -9,7 +9,7 @@ import se.culvertsoft.mnet.Message
 import se.culvertsoft.mnet.NodeUUID
 
 class WebsockInHandler(
-  backEnd: NodeIfc,
+  backEnd: NodeCallbackIfc,
   addr: InetSocketAddress) extends WebSocketServer(addr) {
 
   private val serializer = new WebsockSerializer

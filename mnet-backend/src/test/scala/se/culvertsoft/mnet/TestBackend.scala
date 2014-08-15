@@ -7,6 +7,7 @@ import se.culvertsoft.mnet.backend.Node
 import se.culvertsoft.mnet.backend.WebSockProvider
 import se.culvertsoft.mnet.backend.WebsockSerializer
 import se.culvertsoft.mnet.backend.Route
+import scala.collection.mutable.ArrayBuffer
 
 object TestBackend {
 
@@ -86,21 +87,56 @@ class TestBackend {
     val ws1 = b1.getProvider[WebSockProvider]
     val ws2 = b2.getProvider[WebSockProvider]
 
-    Thread.sleep(500)
-    
-    assert(b1.getRoutes.isEmpty)
-    assert(b2.getRoutes.isEmpty)
-    
+    Thread.sleep(100)
+
+    assert(b1.viewRoutes.isEmpty)
+    assert(b2.viewRoutes.isEmpty)
+
     ws1.addOutboundConnection(ws2.listenPort)
 
-    Thread.sleep(1000)
-    
-    assert(b1.getRoutes.nonEmpty)
-    assert(b2.getRoutes.nonEmpty)
-    
-   // assert(b1GotMsg)
-   // assert(b2GotMsg)
+    Thread.sleep(100)
+
+    assert(b1.viewRoutes.nonEmpty)
+    assert(b2.viewRoutes.nonEmpty)
 
   }
 
+  @Test
+  def canSendEachOtherMessages() {
+
+    val b1Msgs = new ArrayBuffer[Message]
+    val b2Msgs = new ArrayBuffer[Message]
+
+    val b1 = TestBackend.newNode(b1Msgs += _).start()
+    val b2 = TestBackend.newNode(b2Msgs += _).start()
+
+    val ws1 = b1.getProvider[WebSockProvider]
+    val ws2 = b2.getProvider[WebSockProvider]
+
+    Thread.sleep(100)
+
+    assert(b1.viewRoutes.isEmpty)
+    assert(b2.viewRoutes.isEmpty)
+
+    ws1.addOutboundConnection(ws2.listenPort)
+
+    Thread.sleep(100)
+
+    assert(b1.viewRoutes.nonEmpty)
+    assert(b2.viewRoutes.nonEmpty)
+
+    val errMsgSentByB1 = new ErrorMessage().setMsg("ErrorFromB1")
+    val errMsgSentByB2 = new ErrorMessage().setMsg("ErrorFromB2")
+    
+    b1.broadcastJson(errMsgSentByB1)
+    b2.broadcastJson(errMsgSentByB2)
+    
+    Thread.sleep(100)
+    
+    assert(b1Msgs.size ==1)
+    assert(b2Msgs.size ==1)
+    
+    
+  }
+  
 }
