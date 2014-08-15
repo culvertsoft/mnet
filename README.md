@@ -3,7 +3,7 @@ MNet
 
 WARNING: This project is in its infant stage and is not yet intended to be used, not even for testing/evaluation! Release is scheduled to be some time after our sister project [mgen](https://github.com/culvertsoft/mgen).
 
-MNet will be a data format- and programming language agnostic software network infrastructure provider based on websockets. Websockets are selected for their simple message-based API as well as having a well defined standard that may be leveraged from virtually any programming language and platform.
+MNet will be a data format-, transport layer- and programming language agnostic software network infrastructure provider. A default transport layer implemenation will be written using websockets. Websockets are selected for their simple message-based API as well as having a well defined standard that may be leveraged from virtually any programming language and platform.
 
 MNet will allow you to connect your client applications to a persistent network of nodes and other clients (=service providers). When connected you may register services and query available services on the network, as well as send custom messages (byte arrays) to all of or a subset currently connected clients.
 
