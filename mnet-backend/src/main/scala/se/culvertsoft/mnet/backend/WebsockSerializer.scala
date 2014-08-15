@@ -9,7 +9,7 @@ import se.culvertsoft.mgen.javapack.serialization.JsonReader
 import se.culvertsoft.mgen.javapack.serialization.JsonWriter
 import se.culvertsoft.mnet.Message
 
-class Serializer {
+class WebsockSerializer {
 
   // Stuff for serialization
   private val classRegistry = new ClassRegistry

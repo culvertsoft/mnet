@@ -12,7 +12,7 @@ class WebsockInHandler(
   backEnd: NodeIfc,
   addr: InetSocketAddress) extends WebSocketServer(addr) {
 
-  private val serializer = new Serializer
+  private val serializer = new WebsockSerializer
   private val handler = new ConnectionHandler(backEnd)
 
   override def onOpen(conn: WebSocket, handshake: ClientHandshake) {

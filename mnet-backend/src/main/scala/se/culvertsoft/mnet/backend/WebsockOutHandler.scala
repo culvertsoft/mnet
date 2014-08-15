@@ -13,7 +13,7 @@ class WebsockOutHandler(
   extends ReconnectingWebsocket
   with Connection {
 
-  private val serializer = new Serializer
+  private val serializer = new WebsockSerializer
   private val handler = new ConnectionHandler(backEnd)
 
   override def onConnecting() {
