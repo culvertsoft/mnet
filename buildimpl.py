@@ -15,7 +15,8 @@ def build():
     build_java_and_scala()
 
 def test():
-    print("test() not yet implemented!")
+    sbt_test(".")
+    #TODO: test cppclient
 
 def eclipse():
     sbt_eclipse(".")
