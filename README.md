@@ -5,7 +5,7 @@ WARNING: This project is in its infant stage and is not yet intended to be used,
 
 MNet will be a data format-, transport layer- and programming language agnostic software network infrastructure provider. A default transport layer implemenation will be written using websockets. Websockets are selected for their simple message-based API as well as having a well defined standard that may be leveraged from virtually any programming language and platform.
 
-MNet will allow you to connect your client applications to a persistent network of nodes and other clients (=service providers). When connected you may register services and query available services on the network, as well as send custom messages (byte arrays) to all of or a subset currently connected clients.
+MNet will allow you to connect your client applications to a persistent network of nodes, where you may announce services on the network, as well as send custom messages (byte arrays) to all of or a subset of known nodes.
 
 It can also be used a simple server-client skeleton for you to manage, for example for game servers and similar applications.
 
