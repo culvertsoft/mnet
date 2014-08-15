@@ -16,26 +16,26 @@ class WebsockInHandler(
   private val handler = new ConnectionHandler(backEnd)
 
   override def onOpen(conn: WebSocket, handshake: ClientHandshake) {
-    handler.onConnect(conn)
+    handler.onConnect(RichWebSock(conn))
   }
 
   override def onClose(conn: WebSocket, code: Int, reason: String, remote: Boolean) {
-    handler.onDisconnect(reason, conn)
+    handler.onDisconnect(reason, RichWebSock(conn))
   }
 
   override def onMessage(conn: WebSocket, jsonMsg: String) {
-    handler.onMessage(conn, serializer.deserializeJson(jsonMsg))
+    handler.onMessage(RichWebSock(conn), serializer.deserializeJson(jsonMsg))
   }
 
   override def onMessage(conn: WebSocket, binaryMsg: ByteBuffer) {
-    handler.onMessage(conn, serializer.deserializeBinary(binaryMsg.array))
+    handler.onMessage(RichWebSock(conn), serializer.deserializeBinary(binaryMsg.array))
   }
 
   override def onError(conn: WebSocket, ex: Exception) {
-    handler.onError(ex, conn)
+    handler.onError(ex, RichWebSock(conn))
   }
 
-  implicit class RichWebSock(socket: WebSocket) extends Connection {
+  case class RichWebSock(socket: WebSocket) extends Connection {
     def sendJson(msg: Message) = synchronized { socket.send(serializer.serializeJson(msg)) }
     def sendBinary(msg: Message) = synchronized { socket.send(serializer.serializeBinary(msg)) }
   }

@@ -1,28 +1,10 @@
 <Module>
-
-    <Enums>
-    </Enums>
     
     <Types>
     
         <BackendConfiguration>
-            <port type="int">80</port>
-            <remoteNodes type="list[string]">[]</remoteNodes>
-            <allowOtherNodes type="bool"/>
-            <storeOtherNodes type="bool"/>
-            
-            <!-- Not yet implemented (all below) -->
-            <listeningInterfaces type="list[string]"/>
-            <maxClients type="int"/>
-            <maxRemoteBackendNodes type="int"/>
-            <allowedRemoteBackendNodeMacAddresses type="list[string]"/>
-            <allowedClientMacAddresses type="list[string]"/>
-            <allowedClientUrls type="list[string]"/>
-            <allowedRemoteBackendNodeUrls type="list[string]"/>
-            <blockedRemoteBackendNodeMacAddresses type="list[string]"/>
-            <blockedClientMacAddresses type="list[string]"/>
-            <blockedClientUrls type="list[string]"/>
-            <blockedRemoteBackendNodeUrls type="list[string]"/>
+            <listenPort type="int">80</listenPort>
+            <connectTo type="list[String]">[]</connectTo>
         </BackendConfiguration>
     
     </Types>

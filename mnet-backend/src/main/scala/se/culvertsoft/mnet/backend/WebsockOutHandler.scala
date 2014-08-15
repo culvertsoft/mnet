@@ -10,7 +10,7 @@ class WebsockOutHandler(
   backEnd: NodeIfc,
   uri: URI,
   timeout: Int)
-  extends ReconnectingWebsocket
+  extends ReconnectingWebsocket(uri, timeout)
   with Connection {
 
   private val serializer = new WebsockSerializer

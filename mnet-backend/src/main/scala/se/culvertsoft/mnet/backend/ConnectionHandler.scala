@@ -14,7 +14,7 @@ import se.culvertsoft.mnet.NodeUUID
 class ConnectionHandler(backEnd: NodeIfc) {
 
   private val conn2Id = new ConcurrentHashMap[Connection, ArrayBuffer[NodeUUID]].asScala
-  private val endpoints = new ConcurrentHashMap[NodeUUID, Route].asScala
+  private val routes = new ConcurrentHashMap[NodeUUID, Route].asScala
 
   def onMessage(conn: Connection, msg: Message) {
 
@@ -22,27 +22,36 @@ class ConnectionHandler(backEnd: NodeIfc) {
 
       case msg: NodeAnnouncement =>
 
+        println(s"$this got announcement from $conn")
+        
         if (!msg.hasSenderId)
           throw new BackendException(s"${msg._typeName} from $conn missing senderId", conn)
 
-        if (!endpoints.contains(msg.getSenderId))
-          addEndpoint(msg, conn, new Route(msg.getSenderId, conn))
-
-        backEnd.onMessage(msg, endpoints.get(msg.getSenderId))
+        println(s"$this checking announcement")
+        
+        routes.get(msg.getSenderId) match {
+          case x @ Some(route) =>
+            backEnd.onMessage(msg, x)
+          case None =>
+            addEndpoint(msg, conn, new Route(msg.getSenderId, conn))
+        }
 
       case msg: IdCreateRequest =>
         conn.sendJson(new IdCreateReply().setCreatedId(MkId()))
 
       case msg =>
-        if (msg.hasSenderId)
-          backEnd.onMessage(msg, endpoints.get(msg.getSenderId))
-        else
-          backEnd.onMessage(msg, None)
+
+        backEnd.onMessage(msg,
+          if (msg.hasSenderId) routes.get(msg.getSenderId)
+          else None)
 
     }
   }
 
   def onConnect(conn: Connection) {
+    val announcement = backEnd.createAnnouncement()
+    println("Sending " + announcement)
+    conn.sendJson(announcement)
   }
 
   def onError(error: Exception, item: Connection) {
@@ -50,16 +59,24 @@ class ConnectionHandler(backEnd: NodeIfc) {
   }
 
   def onDisconnect(reason: String, conn: Connection) {
-    for (endPoints <- conn2Id.remove(conn)) {
-      for (endPoint <- endPoints) {
-        backEnd.onDisconnect(endpoints(endPoint), reason)
+
+    val removedRoutes: Seq[Route] = conn2Id.synchronized {
+      conn2Id.remove(conn) match {
+        case Some(items) => items.map(routes.remove(_).get)
+        case None => Nil
       }
     }
+
+    removedRoutes.foreach(backEnd.onDisconnect(_, reason))
+
   }
 
-  private def addEndpoint(msg: NodeAnnouncement, conn: Connection, route: Route) = synchronized {
-    endpoints.put(msg.getSenderId, route)
-    conn2Id.getOrElse(conn, new ArrayBuffer) += msg.getSenderId
+  private def addEndpoint(msg: NodeAnnouncement, conn: Connection, route: Route) {
+    println("Adding endpoint")
+    conn2Id.synchronized {
+      conn2Id.getOrElse(conn, new ArrayBuffer) += (msg.getSenderId)
+      routes.put(msg.getSenderId, route)
+    }
     backEnd.onConnect(msg, route)
   }
 

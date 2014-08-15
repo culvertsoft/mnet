@@ -2,9 +2,12 @@ package se.culvertsoft.mnet.backend
 
 import se.culvertsoft.mnet.Message
 import se.culvertsoft.mnet.NodeAnnouncement
+import se.culvertsoft.mnet.NodeUUID
 
 trait NodeIfc {
 
+  def createAnnouncement(): NodeAnnouncement
+  
   def onConnect(msg: NodeAnnouncement, route: Route)
 
   def onDisconnect(route: Route, reason: String)
