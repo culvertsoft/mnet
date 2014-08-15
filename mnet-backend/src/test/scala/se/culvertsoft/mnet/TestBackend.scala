@@ -1,13 +1,15 @@
 package se.culvertsoft.mnet
 
+import scala.collection.mutable.ArrayBuffer
+
 import org.junit.Test
+
 import se.culvertsoft.mnet.api.ReconnectingWebsocket
 import se.culvertsoft.mnet.backend.BackendConfiguration
 import se.culvertsoft.mnet.backend.Node
+import se.culvertsoft.mnet.backend.Route
 import se.culvertsoft.mnet.backend.WebSockProvider
 import se.culvertsoft.mnet.backend.WebsockSerializer
-import se.culvertsoft.mnet.backend.Route
-import scala.collection.mutable.ArrayBuffer
 
 object TestBackend {
 
@@ -78,11 +80,8 @@ class TestBackend {
   @Test
   def canAnnounceOnBackend() {
 
-    var b1GotMsg = false
-    var b2GotMsg = false
-
-    val b1 = TestBackend.newNode(msg => b1GotMsg = true).start()
-    val b2 = TestBackend.newNode(msg => b2GotMsg = true).start()
+    val b1 = TestBackend.newNode().start()
+    val b2 = TestBackend.newNode().start()
 
     val ws1 = b1.getProvider[WebSockProvider]
     val ws2 = b2.getProvider[WebSockProvider]
@@ -127,16 +126,15 @@ class TestBackend {
 
     val errMsgSentByB1 = new ErrorMessage().setMsg("ErrorFromB1")
     val errMsgSentByB2 = new ErrorMessage().setMsg("ErrorFromB2")
-    
+
     b1.broadcastJson(errMsgSentByB1)
     b2.broadcastJson(errMsgSentByB2)
-    
+
     Thread.sleep(100)
-    
-    assert(b1Msgs.size ==1)
-    assert(b2Msgs.size ==1)
-    
-    
+
+    assert(b1Msgs.size == 1)
+    assert(b2Msgs.size == 1)
+
   }
-  
+
 }
