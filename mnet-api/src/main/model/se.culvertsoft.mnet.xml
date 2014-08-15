@@ -1,53 +1,59 @@
 <Module>
 
     <Enums>
-    
-        <UrlType>
-            <Ipv4/>
-            <Ipv6/>
-            <hostname/>
-            <any/>
-        </UrlType>
-        
     </Enums>
     
     <Types>
     
-        <MNetPublicType/>
     
-        <NetworkAddress extends="MNetPublicType">
-            <url type="string"/>
-            <urlType type="UrlType"/>
-        </NetworkAddress>
-    
-        <NetworkId extends="MNetPublicType">
+        <!-- ** ** * ** ** -->
+        <!-- General types -->
+        <!-- ** ** * ** ** -->
+        
+        <NodeUUID>
             <lsb type="int64"/>
             <msb type="int64"/>
-        </NetworkId>
+        </NodeUUID>
+
+        <MessageFilter/>
         
-        <NetworkIfc extends="MNetPublicType">
-            <discoveredBackendNodes type="list[BackendNodeHandle]" flags="polymorphic, transient"/>
-        </NetworkIfc>
-            
-        <BackendNodeHandle extends="MNetPublicType">
-            <nodeId type="NetworkId"/>
-            <discoveredClients type="list[ClientHandle]" flags="polymorphic, transient"/>
-            <address type="NetworkAddress"/>
-        </BackendNodeHandle>
+        
+        <!-- ** ** * ** ** -->
+        <!-- Message types -->
+        <!-- ** ** * ** ** -->
+        
+        <Message>
+            <senderId type="NodeUUID"/>
+            <targetId type="NodeUUID"/>
+            <hops type="int8">0</hops>
+            <maxHops type="int8">3</maxHops>
+            <filter type="MessageFilter" flags="polymorphic"/>
+        </Message>
     
-        <ClientHandle extends="MNetPublicType">
-            <clientId type="NetworkId"/>
-            <parentNodeId type="NetworkId"/>
-            <discoveredServices type="list[ServiceDescription]" flags="polymorphic"/>
-            <address type="NetworkAddress"/>
-        </ClientHandle>
-        
-        <ServiceDescription extends="MNetPublicType">
-            <serviceName type="string"/>
-            <description type="string"/>
+        <IdCreateRequest extends="Message"/>
+
+        <IdCreateReply extends="Message">
+            <createdId type="NodeUUID"/>
+        </IdCreateReply>
+
+        <NodeAnnouncement extends="Message">
+            <name type="string"/>
             <tags type="list[string]"/>
-        </ServiceDescription>
+        </NodeAnnouncement>
+
+        <DataMessage extends="Message">
+            <binaryData type="array[byte]"/>
+            <stringData type="string"/>
+            <metaData type="string"/>
+        </DataMessage>
+        
+        <ErrorMessage extends="Message">
+            <msg type="String"/>
+            <exceptionType type="String"/>
+            <stackTrace type="String"/>
+        </ErrorMessage>
+
         
     </Types>
-    
+
 </Module>

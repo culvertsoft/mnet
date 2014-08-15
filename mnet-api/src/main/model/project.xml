@@ -2,7 +2,6 @@
 
     <Sources>
         <Source>se.culvertsoft.mnet.xml</Source>
-        <Source>se.culvertsoft.mnet.lowlevel.xml</Source>
     </Sources>
     
     <Generator name="Java">

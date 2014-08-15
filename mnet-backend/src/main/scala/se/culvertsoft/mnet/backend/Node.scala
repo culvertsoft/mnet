@@ -1,28 +1,67 @@
 package se.culvertsoft.mnet.backend
 
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashMap
 
-import org.java_websocket.WebSocket
+import se.culvertsoft.mnet.Message
+import se.culvertsoft.mnet.NodeUUID
 
-import se.culvertsoft.mnet.NetworkId
+class Node(settings: BackendConfiguration)
+  extends NodeIfc {
 
-class Node(val id: NetworkId) {
-  private val connections = new ArrayBuffer[NodeConnection]
+  val id = MkId()
+  val port = settings.getPort()
 
-  def init(connectTo: String, backEnd: BackEnd): Node = {
+  private val routingTable = new HashMap[NodeUUID, Route]
+  private val routeProviders = new ArrayBuffer[RouteProvider]
+
+  /**
+   * ****************************************
+   *
+   * 			API
+   *
+   * ***************************************
+   */
+
+  def start(): Node = {
+    routeProviders.foreach(_.start(this))
     this
   }
 
-  def init(backEnd: BackEnd): Node = {
+  def stop(): Node = {
+    routeProviders.foreach(_.stop())
     this
   }
 
-  def removeConnection(connection: WebSocket) {
-	  // TODO: Impl
+  def addRouteProvider(routeProvider: RouteProvider): Node = {
+    routeProviders += routeProvider
+    this
   }
-  
-  def close() {
-    connections.foreach(_.close())
+
+  /**
+   * ****************************************
+   *
+   * 			OVERRIDEABLES
+   *
+   * ***************************************
+   */
+
+  def onConnect(route: Route) {
+    if (!routingTable.contains(route.id))
+      routingTable.put(route.id, route)
+  }
+
+  def onDisconnect(route: Route, reason: String) {
+    if (routingTable.get(route.id) == route)
+      routingTable.remove(route.id)
+  }
+
+  def onError(route: Option[Route], error: Exception) {
+
+  }
+
+  def onMessage(route: Option[Route], message: Message) {
+
   }
 
 }

@@ -42,7 +42,7 @@ class ReconnectingWebsocket(
     this
   }
 
-  final def close() = {
+  final def stop() = {
     m_toLive = false
     this
   }
