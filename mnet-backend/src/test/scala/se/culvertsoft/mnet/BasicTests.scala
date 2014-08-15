@@ -68,6 +68,9 @@ class BasicTests {
 
     assert(b1.viewRoutes.nonEmpty)
     assert(b2.viewRoutes.nonEmpty)
+    
+    b2.stop()
+    b1.stop()
 
   }
 
@@ -106,6 +109,8 @@ class BasicTests {
     assert(b1Msgs.size == 1)
     assert(b2Msgs.size == 1)
 
+    b2.stop()
+    b1.stop()
   }
 
   @Test
@@ -164,5 +169,8 @@ class BasicTests {
 
     Thread.sleep(100)
 
+    b2.stop()
+    b1.stop()
   }
+  
 }

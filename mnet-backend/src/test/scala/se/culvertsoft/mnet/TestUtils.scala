@@ -34,4 +34,13 @@ object TestUtils {
     System.nanoTime() / 1e9
   }
 
+  def within(f: => Boolean, tMax: Double): Boolean = {
+    val t0 = getTime
+    while (!f) {
+    	if (getTime - t0 > tMax)
+    	  return false
+    }
+    true
+  }
+
 }
