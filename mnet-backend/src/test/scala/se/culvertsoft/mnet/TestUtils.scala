@@ -22,7 +22,7 @@ object TestUtils {
   }
 
   def newNode(msgHandler: Message => Unit = _ => Unit): Node = {
-    val settings = getTestCfg
+    val settings = getTestCfg()
     new Node() {
       override def handleMessage(message: Message, route: Option[Route]) {
         msgHandler(message)
