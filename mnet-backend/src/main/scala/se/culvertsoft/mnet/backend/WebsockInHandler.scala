@@ -5,6 +5,7 @@ import java.net.Socket
 import java.nio.ByteBuffer
 import java.nio.channels.SelectionKey
 import java.nio.channels.SocketChannel
+
 import org.java_websocket.WebSocket
 import org.java_websocket.WebSocketAdapter
 import org.java_websocket.WebSocketImpl
@@ -12,9 +13,10 @@ import org.java_websocket.drafts.Draft
 import org.java_websocket.handshake.ClientHandshake
 import org.java_websocket.server.DefaultWebSocketServerFactory
 import org.java_websocket.server.WebSocketServer
+
+import se.culvertsoft.mnet.DataMessage
 import se.culvertsoft.mnet.Message
 import se.culvertsoft.mnet.api.ConfigureSocket
-import se.culvertsoft.mnet.api.MTCommandQue
 
 class WebsockInHandler(
   handler: NodeConnectionHandler,
@@ -66,7 +68,12 @@ class WebsockInHandler(
   case class RichWebSock(socket: WebSocket) extends Connection {
     def sendJson(msg: Message) = synchronized { socket.send(serializer.serializeJson(msg)) }
     def sendBinary(msg: Message) = synchronized { socket.send(serializer.serializeBinary(msg)) }
-    def sendPreferred(msg: Message) { sendJson(msg) }
+    def sendPreferred(msg: Message) {
+      msg match {
+        case msg: DataMessage if (msg.hasBinaryData()) => sendBinary(msg)
+        case msg => sendJson(msg)
+      }
+    }
   }
 
 }

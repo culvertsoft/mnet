@@ -3,6 +3,7 @@ package se.culvertsoft.mnet.backend
 import java.net.URI
 import java.nio.ByteBuffer
 
+import se.culvertsoft.mnet.DataMessage
 import se.culvertsoft.mnet.Message
 import se.culvertsoft.mnet.api.ReconnectingWebsocket
 
@@ -51,7 +52,10 @@ class WebsockOutHandler(
   }
 
   def sendPreferred(msg: Message) {
-    sendJson(msg)
+    msg match {
+      case msg: DataMessage if (msg.hasBinaryData()) => sendBinary(msg)
+      case msg => sendJson(msg)
+    }
   }
 
 }
