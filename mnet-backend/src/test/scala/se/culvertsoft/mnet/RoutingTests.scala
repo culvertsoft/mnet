@@ -88,13 +88,15 @@ class RoutingTests {
     assertWithin1sec(leftMost.getRoutes.size == 3)
     assertWithin1sec(leftCenter.getRoutes.size == 3)
     assertWithin1sec(rightCenter.getRoutes.size == 3)
+    assertWithin1sec(rightMost.getRoutes.size == 3)
 
   }
- @Test
+
+  @Test
   def bridgedMessaging() {
 
     val portMaker = new PortMaker(1400)
-    
+
     val leftMostCollect = new ConcurrentLinkedQueue[Message]
     val leftCenterCollect = new ConcurrentLinkedQueue[Message]
     val rightCenterCollect = new ConcurrentLinkedQueue[Message]
@@ -112,18 +114,43 @@ class RoutingTests {
     assertWithin1sec(leftMost.getRoutes.size == 3)
     assertWithin1sec(leftCenter.getRoutes.size == 3)
     assertWithin1sec(rightCenter.getRoutes.size == 3)
-    
+    assertWithin1sec(rightMost.getRoutes.size == 3)
+
     rightMost.sendPreferred(new DataMessage().setTargetId(leftMost.id))
     leftMost.sendPreferred(new DataMessage().setTargetId(rightMost.id))
-    
+
     assertWithin1sec(leftMostCollect.nonEmpty)
     assertWithin1sec(rightMostCollect.nonEmpty)
     assertWithin1sec(leftCenterCollect.isEmpty)
     assertWithin1sec(rightCenterCollect.isEmpty)
 
   }
- 
-  def bridge(from: Node, to: Node) {
+
+  @Test
+  def aBridgeTooFar() {
+
+    val portMaker = new PortMaker(1500)
+
+    val leftMost = TestUtils.newNode(portMaker.nextPort)().start()
+    val leftCenter = TestUtils.newNode(portMaker.nextPort)().start()
+    val center = TestUtils.newNode(portMaker.nextPort)().start()
+    val rightCenter = TestUtils.newNode(portMaker.nextPort)().start()
+    val rightMost = TestUtils.newNode(portMaker.nextPort)().start()
+
+    bridge(leftMost, leftCenter)
+    bridge(leftCenter, center)
+    bridge(center, rightCenter)
+    bridge(rightCenter, rightMost)
+
+    assertWithin1sec(leftMost.getRoutes.size == 3)
+    assertWithin1sec(leftCenter.getRoutes.size == 4)
+    assertWithin1sec(center.getRoutes.size == 4)
+    assertWithin1sec(rightCenter.getRoutes.size == 4)
+    assertWithin1sec(rightMost.getRoutes.size == 3)
+
+  }
+
+  private def bridge(from: Node, to: Node) {
     val wsFrom = from.getProvider[WebSockProvider]
     val wsTo = to.getProvider[WebSockProvider]
     wsFrom.addOutboundConnection(wsTo.listenPort)
