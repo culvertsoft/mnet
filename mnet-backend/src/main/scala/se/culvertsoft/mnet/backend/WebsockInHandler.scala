@@ -5,7 +5,6 @@ import java.net.Socket
 import java.nio.ByteBuffer
 import java.nio.channels.SelectionKey
 import java.nio.channels.SocketChannel
-
 import org.java_websocket.WebSocket
 import org.java_websocket.WebSocketAdapter
 import org.java_websocket.WebSocketImpl
@@ -13,12 +12,12 @@ import org.java_websocket.drafts.Draft
 import org.java_websocket.handshake.ClientHandshake
 import org.java_websocket.server.DefaultWebSocketServerFactory
 import org.java_websocket.server.WebSocketServer
-
 import se.culvertsoft.mnet.Message
 import se.culvertsoft.mnet.api.ConfigureSocket
+import se.culvertsoft.mnet.api.MTCommandQue
 
 class WebsockInHandler(
-  backEnd: NodeCallbackIfc,
+  handler: NodeConnectionHandler,
   addr: InetSocketAddress,
   useTcpNoDelay: Boolean) extends WebSocketServer(addr) {
 
@@ -43,7 +42,6 @@ class WebsockInHandler(
   })
 
   private val serializer = new WebsockSerializer
-  private val handler = new ConnectionHandler(backEnd)
 
   override def onOpen(conn: WebSocket, handshake: ClientHandshake) {
     handler.onConnect(RichWebSock(conn))

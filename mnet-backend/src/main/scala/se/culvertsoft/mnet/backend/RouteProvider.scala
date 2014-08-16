@@ -1,6 +1,6 @@
 package se.culvertsoft.mnet.backend
 
 trait RouteProvider {
-  def start(backEnd: NodeCallbackIfc): Unit
+  def start(backEnd: NodeConnectionHandler): Unit
   def stop(): Unit
 }

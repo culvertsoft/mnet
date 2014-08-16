@@ -1,39 +1,55 @@
 package se.culvertsoft.mnet
 
 import java.util.concurrent.ConcurrentLinkedQueue
-
 import org.junit.Test
-
 import TestUtils._
 import se.culvertsoft.mnet.backend.WebSockProvider
+import scala.collection.mutable.ArrayBuffer
+import se.culvertsoft.mnet.backend.Node
 
 class RoutingTests {
 
   @Test
-  def threeInARow() {
+  def manyToOne() {
 
-    val b1Msgs = new ConcurrentLinkedQueue[Message]
-    val b2Msgs = new ConcurrentLinkedQueue[Message]
-    val b3Msgs = new ConcurrentLinkedQueue[Message]
+    val n = 3
+    val nodes = new ArrayBuffer[Node]
 
-    val b1 = TestUtils.newNode(1100)(b1Msgs.add(_)).start()
-    val b2 = TestUtils.newNode(1101)(b2Msgs.add(_)).start()
-    val b3 = TestUtils.newNode(1102)(b3Msgs.add(_)).start()
+    try {
 
-    val ws1 = b1.getProvider[WebSockProvider]
-    val ws2 = b2.getProvider[WebSockProvider]
-    val ws3 = b3.getProvider[WebSockProvider]
+      val firstNode = TestUtils
+        .newNode(1100)()
+        .start()
 
-    ws3.addOutboundConnection(ws2.listenPort)
-    ws1.addOutboundConnection(ws2.listenPort)
+      val tgtPort = firstNode.getProvider[WebSockProvider].listenPort
 
-    assertWithin1sec(b1.getRoutes.size == 2)
-    assertWithin1sec(b2.getRoutes.size == 2)
-    assertWithin1sec(b3.getRoutes.size == 2)
+      for (i <- 0 until n) {
+        val port = 1101 + i
+        val node = TestUtils
+          .newNode(port)()
+          .start()
+        nodes += node
+      }
 
-    b3.stop()
-    b2.stop()
-    b1.stop()
+      for (node <- nodes) {
+        if (node != firstNode) {
+          val myProvider = node.getProvider[WebSockProvider]
+          myProvider.addOutboundConnection(tgtPort)
+        }
+      }
+
+      Thread.sleep(1000)
+
+      println(firstNode.getRoutes.size)
+
+      for (node <- nodes) {
+        println(node.getRoutes.size)
+      }
+      assertWithin1sec(nodes.forall(_.getRoutes.size == n))
+
+    } finally {
+      nodes.foreach(_.stop())
+    }
 
   }
 

@@ -1,9 +1,7 @@
 package se.culvertsoft.mnet.backend
 
-import java.util.concurrent.ConcurrentHashMap
-
+import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.JavaConversions.mapAsScalaConcurrentMap
-import scala.collection.concurrent
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
 
@@ -11,12 +9,13 @@ import se.culvertsoft.mnet.Message
 import se.culvertsoft.mnet.NodeAnnouncement
 import se.culvertsoft.mnet.NodeUUID
 
-class Node {
+class Node extends NodeCallbackIfc {
 
   val id = MkId()
 
-  private val routes: concurrent.Map[NodeUUID, Route] = new ConcurrentHashMap[NodeUUID, Route]
+  private val routes = new java.util.concurrent.ConcurrentHashMap[NodeUUID, Route]
   private val routeProviders = new ArrayBuffer[RouteProvider]
+  private val connectionHandler = new NodeConnectionHandler(this)
 
   /**
    * ****************************************
@@ -27,20 +26,22 @@ class Node {
    */
 
   def getRoutes(): Seq[Route] = {
-    routes.values.toSeq
+    new ArrayBuffer[Route] ++ routes.values()
   }
 
   def getProviders(): Seq[RouteProvider] = {
-    new ArrayBuffer[RouteProvider] ++ routeProviders.toSeq
+    new ArrayBuffer[RouteProvider] ++ routeProviders
   }
 
   def start(): Node = {
-    routeProviders.foreach(_.start(callbackIfc))
+    connectionHandler.start()
+    routeProviders.foreach(_.start(connectionHandler))
     this
   }
 
   def stop(): Node = {
     routeProviders.foreach(_.stop())
+    connectionHandler.stop()
     this
   }
 
@@ -92,7 +93,7 @@ class Node {
   }
 
   def handleError(error: Exception, endPoint: AnyRef) {
-	  error.printStackTrace()
+    error.printStackTrace()
   }
 
   def handleMessage(message: Message, route: Option[Route]) {
@@ -107,42 +108,40 @@ class Node {
    * ***************************************
    */
 
-  private val callbackIfc = new NodeCallbackIfc() {
+  override def onConnect(msg: NodeAnnouncement, route: Route) {
+    incMsgHops(msg)
+    routes.putIfAbsent(route.endpointId, route)
+    broadcastJson(msg, _ != route)
+    handleConnect(route)
+  }
 
-    override def onConnect(msg: NodeAnnouncement, route: Route) {
-      incMsgHops(msg)
-      routes.putIfAbsent(route.endpointId, route)
-      broadcastJson(msg, _ != route)
-      handleConnect(route)
+  override def onDisconnect(route: Route, reason: String) {
+    if (routes.get(route.endpointId) == route) {
+      routes.remove(route.endpointId)
+      handleDisconnect(route, reason)
     }
+  }
 
-    override def onDisconnect(route: Route, reason: String) {
-      if (routes.get(route.endpointId) == route) {
-        routes.remove(route.endpointId)
-        handleDisconnect(route, reason)
-      }
-    }
+  override def onError(error: Exception, endPoint: AnyRef) {
+    handleError(error, endPoint)
+  }
 
-    override def onError(error: Exception, endPoint: AnyRef) {
-      handleError(error, endPoint)
-    }
+  override def onMessage(message: Message, route: Option[Route]) {
+    incMsgHops(message)
+    handleMessage(message, route)
+  }
 
-    override def onMessage(message: Message, route: Option[Route]) {
-      incMsgHops(message)
-      handleMessage(message, route)
-    }
-
-    override def createAnnouncement(): NodeAnnouncement = {
-      new NodeAnnouncement().setSenderId(id)
-    }
+  override def createAnnouncement(): NodeAnnouncement = {
+    new NodeAnnouncement().setSenderId(id)
   }
 
   protected final def sendImpl(
     msg: Message,
     sendFunc: Route => Unit): Node = {
     if (msg.getHops < msg.getMaxHops && msg.hasTargetId) {
-      routes.get(msg.getTargetId).foreach { route =>
-        sendFunc(route)
+      routes.get(msg.getTargetId) match {
+        case route: Route => sendFunc(route)
+        case _ =>
       }
     }
     this

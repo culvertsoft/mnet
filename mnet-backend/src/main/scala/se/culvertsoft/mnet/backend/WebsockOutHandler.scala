@@ -7,7 +7,7 @@ import se.culvertsoft.mnet.Message
 import se.culvertsoft.mnet.api.ReconnectingWebsocket
 
 class WebsockOutHandler(
-  backEnd: NodeCallbackIfc,
+  handler: NodeConnectionHandler,
   uri: URI,
   useTcpNoDelay: Boolean,
   timeout: Int)
@@ -15,7 +15,6 @@ class WebsockOutHandler(
   with Connection {
 
   private val serializer = new WebsockSerializer
-  private val handler = new ConnectionHandler(backEnd)
 
   override def onConnecting() {
   }
