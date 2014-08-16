@@ -1,8 +1,8 @@
 package se.culvertsoft.mnet.backend
 
-import scala.collection.JavaConversions.collectionAsScalaIterable
-import scala.collection.JavaConversions.mapAsScalaConcurrentMap
+import scala.annotation.migration
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashMap
 import scala.reflect.ClassTag
 
 import se.culvertsoft.mnet.Message
@@ -13,9 +13,12 @@ class Node extends NodeCallbackIfc {
 
   val id = MkId()
 
-  private val routes = new java.util.concurrent.ConcurrentHashMap[NodeUUID, Route]
+  private val neighbors = new HashMap[NodeUUID, Route]
+  private val routes = new HashMap[NodeUUID, Route]
   private val routeProviders = new ArrayBuffer[RouteProvider]
   private val connectionHandler = new NodeConnectionHandler(this)
+
+  @volatile var routesView: Array[Route] = Array[Route]()
 
   /**
    * ****************************************
@@ -25,8 +28,8 @@ class Node extends NodeCallbackIfc {
    * ***************************************
    */
 
-  def getRoutes(): Seq[Route] = {
-    new ArrayBuffer[Route] ++ routes.values()
+  def getRoutes(): Seq[Route] = routes.synchronized {
+    routesView
   }
 
   def getProviders(): Seq[RouteProvider] = {
@@ -108,14 +111,24 @@ class Node extends NodeCallbackIfc {
    * ***************************************
    */
 
-  override def onConnect(msg: NodeAnnouncement, route: Route) {
-    incMsgHops(msg)
-    routes.putIfAbsent(route.endpointId, route)
+  override def onAnnounce(msg: NodeAnnouncement, route: Route) {
+
+    if (msg.getHops == 1) {
+      neighbors.put(route.endpointId, route)
+    }
+
+    if (!routes.contains(route.endpointId)) {
+      routes.put(route.endpointId, route)
+      routesView = routes.values.toArray
+      handleConnect(route)
+    }
+
     broadcastJson(msg, _ != route)
-    handleConnect(route)
+
   }
 
   override def onDisconnect(route: Route, reason: String) {
+    neighbors.remove(route.endpointId)
     if (routes.get(route.endpointId) == route) {
       routes.remove(route.endpointId)
       handleDisconnect(route, reason)
@@ -127,7 +140,6 @@ class Node extends NodeCallbackIfc {
   }
 
   override def onMessage(message: Message, route: Option[Route]) {
-    incMsgHops(message)
     handleMessage(message, route)
   }
 
@@ -140,7 +152,7 @@ class Node extends NodeCallbackIfc {
     sendFunc: Route => Unit): Node = {
     if (msg.getHops < msg.getMaxHops && msg.hasTargetId) {
       routes.get(msg.getTargetId) match {
-        case route: Route => sendFunc(route)
+        case Some(route) => sendFunc(route)
         case _ =>
       }
     }
@@ -152,7 +164,7 @@ class Node extends NodeCallbackIfc {
     sendFunc: Route => Unit,
     filter: Route => Boolean = _ => true): Node = {
     if (msg.getHops < msg.getMaxHops) {
-      for ((_, route) <- routes) {
+      for ((_, route) <- neighbors) {
         if (filter(route) && route.endpointId != msg.getSenderId) {
           msg.setTargetId(route.endpointId)
           sendFunc(route)
@@ -160,14 +172,6 @@ class Node extends NodeCallbackIfc {
       }
     }
     this
-  }
-
-  protected final def incMsgHops(msg: Message) {
-    if (!msg.hasHops())
-      msg.setHops(0)
-    if (!msg.hasMaxHops())
-      msg.setMaxHops(3)
-    msg.setHops((msg.getHops + 1).toByte)
   }
 
 }

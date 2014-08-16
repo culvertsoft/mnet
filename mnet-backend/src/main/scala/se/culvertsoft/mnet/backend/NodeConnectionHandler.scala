@@ -17,6 +17,8 @@ class NodeConnectionHandler(node_dont_use_here: NodeCallbackIfc) extends MTComma
 
   def onMessage(conn: Connection, msg: Message) {
 
+    incMsgHops(msg)
+    
     queCommand { backEnd =>
 
       msg match {
@@ -31,8 +33,11 @@ class NodeConnectionHandler(node_dont_use_here: NodeCallbackIfc) extends MTComma
           routes.get(msg.getSenderId) match {
             case x @ Some(route) =>
               backEnd.onMessage(msg, x)
+              backEnd.onAnnounce(msg, route)
             case None =>
-              addEndpoint(msg, conn, new Route(msg.getSenderId, conn))
+              val route = new Route(msg.getSenderId, conn)
+              addEndpoint(msg, conn, route)
+              backEnd.onAnnounce(msg, route)
           }
 
         case msg: IdCreateRequest =>
@@ -80,8 +85,15 @@ class NodeConnectionHandler(node_dont_use_here: NodeCallbackIfc) extends MTComma
     queCommand { backEnd =>
       conn2Id.getOrElse(conn, new ArrayBuffer) += (msg.getSenderId)
       routes.put(msg.getSenderId, route)
-      backEnd.onConnect(msg, route)
     }
+  }
+
+  private final def incMsgHops(msg: Message) {
+    if (!msg.hasHops())
+      msg.setHops(0)
+    if (!msg.hasMaxHops())
+      msg.setMaxHops(3)
+    msg.setHops((msg.getHops + 1).toByte)
   }
 
 }

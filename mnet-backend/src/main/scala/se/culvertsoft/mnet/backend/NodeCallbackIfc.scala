@@ -8,7 +8,7 @@ trait NodeCallbackIfc {
 
   def createAnnouncement(): NodeAnnouncement
   
-  def onConnect(msg: NodeAnnouncement, route: Route)
+  def onAnnounce(msg: NodeAnnouncement, route: Route)
 
   def onDisconnect(route: Route, reason: String)
 
