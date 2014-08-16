@@ -10,6 +10,12 @@
         <!-- General types -->
         <!-- ** ** * ** ** -->
         
+        <NodeSettings>
+            <name type="string">unnamed_node</name>
+            <tags type="list[string]">[]</tags>
+            <announceInterval type="Double">0.5</announceInterval>
+        </NodeSettings>
+        
         <NodeUUID>
             <lsb type="int64"/>
             <msb type="int64"/>

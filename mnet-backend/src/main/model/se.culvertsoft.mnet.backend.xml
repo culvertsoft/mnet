@@ -2,14 +2,11 @@
 
     <Types>
 
-        <BackendConfiguration>
-            <name type="string">unnamed_node</name>
-            <tags type="list[string]">[]</tags>
+        <WebsockBackendSettings>
             <listenPort type="int">80</listenPort>
             <connectTo type="list[String]">[]</connectTo>
             <useTcpNodelay type="bool">true</useTcpNodelay>
-            <announceInterval type="Double">0.5</announceInterval>
-        </BackendConfiguration>
+        </WebsockBackendSettings>
 
     </Types>
 

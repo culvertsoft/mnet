@@ -1,13 +1,9 @@
-package se.culvertsoft.mnet.api
+package se.culvertsoft.mnet.api.util
 
-import java.util.concurrent.ConcurrentLinkedQueue
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.LinkedList
-
-class MTCommandQue[CommandTarget](
-  target: CommandTarget,
+class ThreadConsolidator[CommandInput](
+  input: CommandInput,
   waitTime: Int = 10) {
-  type Command = CommandTarget => Unit
+  type Command = CommandInput => Unit
 
   private var toLive = false
   private val cmds = new java.util.LinkedList[Command]
@@ -17,7 +13,7 @@ class MTCommandQue[CommandTarget](
       cmds.synchronized {
         while (toLive) {
           while (process(cmds.poll())) {}
-          step(target)
+          step(input)
           cmds.wait(waitTime)
         }
       }
@@ -27,7 +23,7 @@ class MTCommandQue[CommandTarget](
   private def process(cmd: Command): Boolean = {
     if (cmd != null) {
       try {
-        cmd(target)
+        cmd(input)
       } catch {
         case e: Exception => handleError(e)
       }
@@ -44,13 +40,13 @@ class MTCommandQue[CommandTarget](
     e.printStackTrace()
   }
 
-  def start(): MTCommandQue[CommandTarget] = {
+  def start(): ThreadConsolidator[CommandInput] = {
     toLive = true
     thread.start()
     this
   }
 
-  def stop(): MTCommandQue[CommandTarget] = {
+  def stop(): ThreadConsolidator[CommandInput] = {
     cmds.synchronized {
       toLive = false
       cmds.notify()
@@ -65,7 +61,7 @@ class MTCommandQue[CommandTarget](
     }
   }
 
-  def step(target: CommandTarget) {
+  def step(target: CommandInput) {
   }
 
 }

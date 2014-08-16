@@ -9,7 +9,7 @@ import org.junit.Test
 import TestUtils.assertFor01sec
 import TestUtils.assertWithin1sec
 import TestUtils.getTime
-import se.culvertsoft.mnet.backend.WebSockProvider
+import se.culvertsoft.mnet.backend.WebSockBackEnd
 
 class CheckLatency {
 
@@ -22,8 +22,8 @@ class CheckLatency {
     val b1 = TestUtils.newNode(500)(b1Msgs.add(_)).start()
     val b2 = TestUtils.newNode(501)(b2Msgs += _).start()
 
-    val ws1 = b1.getProvider[WebSockProvider]
-    val ws2 = b2.getProvider[WebSockProvider]
+    val ws1 = b1.getBackEnd[WebSockBackEnd]
+    val ws2 = b2.getBackEnd[WebSockBackEnd]
 
     assertFor01sec(b1.getRoutes.isEmpty && b2.getRoutes.isEmpty)
 
@@ -40,7 +40,7 @@ class CheckLatency {
     var nRecvd = 0
     while (i < n) {
       val t0 = getTime
-      b2.broadcastJson(errMsgSentByB2)
+      b2.broadcast(errMsgSentByB2)
       while (b1Msgs.isEmpty) {
         if (getTime - t0 > 0.1)
           throw new RuntimeException("Latency test crashed or deadlocked")

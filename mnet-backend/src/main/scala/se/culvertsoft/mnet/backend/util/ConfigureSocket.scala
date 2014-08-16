@@ -1,4 +1,4 @@
-package se.culvertsoft.mnet.api
+package se.culvertsoft.mnet.backend.util
 
 import java.net.Socket
 

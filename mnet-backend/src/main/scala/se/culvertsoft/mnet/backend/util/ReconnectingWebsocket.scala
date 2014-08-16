@@ -1,4 +1,4 @@
-package se.culvertsoft.mnet.api
+package se.culvertsoft.mnet.backend.util
 
 import java.net.Socket
 import java.net.URI
@@ -14,6 +14,11 @@ import org.java_websocket.client.WebSocketClient
 import org.java_websocket.drafts.Draft
 import org.java_websocket.drafts.Draft_10
 import org.java_websocket.handshake.ServerHandshake
+
+import se.culvertsoft.mnet.api.Connected
+import se.culvertsoft.mnet.api.Connecting
+import se.culvertsoft.mnet.api.ConnectionStatus
+import se.culvertsoft.mnet.api.Disconnected
 
 class ReconnectingWebsocket(
   val serverUri: URI,

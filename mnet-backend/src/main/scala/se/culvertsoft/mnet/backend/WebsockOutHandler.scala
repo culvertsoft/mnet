@@ -5,10 +5,12 @@ import java.nio.ByteBuffer
 
 import se.culvertsoft.mnet.DataMessage
 import se.culvertsoft.mnet.Message
-import se.culvertsoft.mnet.api.ReconnectingWebsocket
+import se.culvertsoft.mnet.api.Connection
+import se.culvertsoft.mnet.api.ConnectionConsolidator
+import se.culvertsoft.mnet.backend.util.ReconnectingWebsocket
 
 class WebsockOutHandler(
-  handler: NodeConnectionHandler,
+  handler: ConnectionConsolidator,
   uri: URI,
   useTcpNoDelay: Boolean,
   timeout: Int)
@@ -51,7 +53,7 @@ class WebsockOutHandler(
     sendBinaryMessage(serializer.serializeBinary(msg))
   }
 
-  def sendPreferred(msg: Message) {
+  def send(msg: Message) {
     msg match {
       case msg: DataMessage if (msg.hasBinaryData()) => sendBinary(msg)
       case msg => sendJson(msg)

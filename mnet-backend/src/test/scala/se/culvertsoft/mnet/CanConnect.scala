@@ -4,8 +4,8 @@ import org.junit.Test
 
 import TestUtils.assertWithin1sec
 import TestUtils.serializer
-import se.culvertsoft.mnet.api.ReconnectingWebsocket
-import se.culvertsoft.mnet.backend.WebSockProvider
+import se.culvertsoft.mnet.backend.WebSockBackEnd
+import se.culvertsoft.mnet.backend.util.ReconnectingWebsocket
 
 class CanConnect {
 
@@ -13,7 +13,7 @@ class CanConnect {
   def test() {
 
     val b = TestUtils.newNode(200)().start()
-    val port = b.getProvider[WebSockProvider].listenPort
+    val port = b.getBackEnd[WebSockBackEnd].listenPort
 
     @volatile var gotMsg: Message = null
     val ws = new ReconnectingWebsocket("127.0.0.1", port, true) {

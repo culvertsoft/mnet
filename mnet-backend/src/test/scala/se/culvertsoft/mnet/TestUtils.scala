@@ -1,26 +1,26 @@
 package se.culvertsoft.mnet
 
-import se.culvertsoft.mnet.backend.BackendConfiguration
-import se.culvertsoft.mnet.backend.Node
-import se.culvertsoft.mnet.backend.Route
-import se.culvertsoft.mnet.backend.WebSockProvider
+import se.culvertsoft.mnet.api.Node
+import se.culvertsoft.mnet.api.Route
+import se.culvertsoft.mnet.backend.WebSockBackEnd
+import se.culvertsoft.mnet.backend.WebsockBackendSettings
 import se.culvertsoft.mnet.backend.WebsockSerializer
 
 object TestUtils {
 
   val serializer = new WebsockSerializer
 
-  def getTestCfg(port: Int): BackendConfiguration = {
-    new BackendConfiguration().setListenPort(port)
+  def getTestCfg(port: Int): WebsockBackendSettings = {
+    new WebsockBackendSettings().setListenPort(port)
   }
 
   def newNode(port: Int)(msgHandler: Message => Unit = _ => Unit): Node = {
     val settings = getTestCfg(port)
-    new Node(settings) {
+    new Node() {
       override def handleMessage(message: Message, route: Option[Route]) {
         msgHandler(message)
       }
-    }.addRouteProvider(new WebSockProvider(settings))
+    }.addBackEnd(new WebSockBackEnd(settings))
   }
 
   def getTime(): Double = {
@@ -56,21 +56,21 @@ object TestUtils {
   def for01sec(f: => Boolean): Boolean = {
     forT(0.1)(f)
   }
-  
+
   def assertWithin1sec(f: => Boolean) {
     assert(within(1)(f))
   }
-    
+
   def assertWithin2sec(f: => Boolean) {
     assert(within(2)(f))
   }
-  
+
   def assertFor1sec(f: => Boolean) {
     assert(forT(1)(f))
   }
-  
+
   def assertFor01sec(f: => Boolean) {
     assert(forT(0.1)(f))
   }
-  
+
 }

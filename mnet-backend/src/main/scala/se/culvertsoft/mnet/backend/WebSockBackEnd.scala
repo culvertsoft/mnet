@@ -2,14 +2,17 @@ package se.culvertsoft.mnet.backend
 
 import java.net.InetSocketAddress
 import java.net.URI
+
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.mutable.ArrayBuffer
-import se.culvertsoft.mnet.api.MTCommandQue
 
-class WebSockProvider(_settings: BackendConfiguration) extends RouteProvider {
+import se.culvertsoft.mnet.api.BackEnd
+import se.culvertsoft.mnet.api.ConnectionConsolidator
+
+class WebSockBackEnd(_settings: WebsockBackendSettings) extends BackEnd {
   val settings = _settings.deepCopy()
 
-  private var connectionHandler: NodeConnectionHandler = null
+  private var connectionHandler: ConnectionConsolidator = null
   private val listeningIfcs = new ArrayBuffer[WebsockInHandler]
   private val connectingTo = new ArrayBuffer[WebsockOutHandler]
 
@@ -21,7 +24,7 @@ class WebSockProvider(_settings: BackendConfiguration) extends RouteProvider {
    * ***************************************
    */
 
-  override def start(handler_in: NodeConnectionHandler) {
+  override def start(handler_in: ConnectionConsolidator) {
     if (connectionHandler != null)
       throw new RuntimeException("Tried to start BackEnd Twice!")
     connectionHandler = handler_in

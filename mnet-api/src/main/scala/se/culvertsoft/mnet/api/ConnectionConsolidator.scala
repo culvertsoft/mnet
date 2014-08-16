@@ -1,4 +1,4 @@
-package se.culvertsoft.mnet.backend
+package se.culvertsoft.mnet.api
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
@@ -9,11 +9,12 @@ import se.culvertsoft.mnet.IdCreateRequest
 import se.culvertsoft.mnet.Message
 import se.culvertsoft.mnet.NodeAnnouncement
 import se.culvertsoft.mnet.NodeUUID
-import se.culvertsoft.mnet.api.MTCommandQue
+import se.culvertsoft.mnet.api.util.NewNodeUUID
+import se.culvertsoft.mnet.api.util.ThreadConsolidator
 
-class NodeConnectionHandler(
+class ConnectionConsolidator(
   node_dont_use_here: Node,
-  fuzzyDt: Boolean = true) extends MTCommandQue[Node](node_dont_use_here) {
+  fuzzyDt: Boolean = true) extends ThreadConsolidator[Node](node_dont_use_here) {
 
   private val conn2Id = new HashMap[Connection, ArrayBuffer[NodeUUID]]
   private val routes = new HashMap[NodeUUID, Route]
@@ -38,19 +39,19 @@ class NodeConnectionHandler(
         case msg: NodeAnnouncement =>
 
           if (!msg.hasSenderId)
-            throw new BackendException(s"${msg._typeName} from $conn missing senderId", conn)
+            throw new MNetException(s"${msg._typeName} from $conn missing senderId", conn)
 
           routes.get(msg.getSenderId) match {
             case x @ Some(route) =>
               node.onAnnounce(msg, route)
             case None =>
-              val route = new Route(msg.getSenderId, conn)
+              val route = new Route(msg.getSenderId, conn, msg)
               addEndpoint(msg, conn, route)
               node.onAnnounce(msg, route)
           }
 
         case msg: IdCreateRequest =>
-          conn.sendJson(new IdCreateReply().setCreatedId(MkId()))
+          conn.send(new IdCreateReply().setCreatedId(NewNodeUUID()))
 
         case msg =>
 
@@ -64,7 +65,7 @@ class NodeConnectionHandler(
 
   def onConnect(conn: Connection) {
     queCommand { node =>
-      conn.sendJson(node.createAnnouncement())
+      conn.send(node.createAnnouncement())
     }
   }
 

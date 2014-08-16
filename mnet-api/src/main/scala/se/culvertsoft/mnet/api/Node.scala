@@ -1,4 +1,4 @@
-package se.culvertsoft.mnet.backend
+package se.culvertsoft.mnet.api
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
@@ -6,20 +6,22 @@ import scala.reflect.ClassTag
 
 import se.culvertsoft.mnet.Message
 import se.culvertsoft.mnet.NodeAnnouncement
+import se.culvertsoft.mnet.NodeSettings
 import se.culvertsoft.mnet.NodeUUID
+import se.culvertsoft.mnet.api.util.NewNodeUUID
 
 class Node(
   val name: String,
   val tags: java.util.ArrayList[String],
   val announceInterval: Double) {
-  def this(settings: BackendConfiguration) = this(settings.getName, settings.getTags, settings.getAnnounceInterval)
+  def this(settings: NodeSettings = new NodeSettings) = this(settings.getName, settings.getTags, settings.getAnnounceInterval)
 
-  val id = MkId()
+  val id = NewNodeUUID()
 
   private val neighbors = new HashMap[NodeUUID, Route]
   private val routes = new HashMap[NodeUUID, Route]
-  private val routeProviders = new ArrayBuffer[RouteProvider]
-  private val connectionHandler = new NodeConnectionHandler(this)
+  private val backEnds = new ArrayBuffer[BackEnd]
+  private val connectionHandler = new ConnectionConsolidator(this)
 
   @volatile var routesView: Array[Route] = Array[Route]()
 
@@ -35,64 +37,46 @@ class Node(
     routesView
   }
 
-  def getProviders(): Seq[RouteProvider] = {
-    new ArrayBuffer[RouteProvider] ++ routeProviders
+  def getBackEnds(): Seq[BackEnd] = {
+    new ArrayBuffer[BackEnd] ++ backEnds
   }
 
   def start(): Node = {
     connectionHandler.start()
-    routeProviders.foreach(_.start(connectionHandler))
+    backEnds.foreach(_.start(connectionHandler))
     this
   }
 
   def stop(): Node = {
     connectionHandler.stop()
-    routeProviders.foreach(_.stop())
+    backEnds.foreach(_.stop())
     this
   }
 
-  def sendJson(msg: Message): Node = {
-    sendImpl(msg, route => route.connection.sendJson(msg))
+  def send(msg: Message): Node = {
+    sendImpl(msg)
   }
 
-  def sendBinary(msg: Message): Node = {
-    sendImpl(msg, route => route.connection.sendBinary(msg))
-  }
-
-  def sendPreferred(msg: Message): Node = {
-    sendImpl(msg, route => route.connection.sendPreferred(msg))
-  }
-
-  def addRouteProvider(routeProvider: RouteProvider): Node = {
-    routeProviders += routeProvider
+  def broadcast(msg: Message, filter: Route => Boolean = _ => true): Node = {
+    broadcastImpl(msg, filter)
     this
   }
 
-  def broadcastJson(msg: Message, filter: Route => Boolean = _ => true): Node = {
-    broadcastImpl(msg, route => route.connection.sendJson(msg), filter)
+  def addBackEnd(BackEnd: BackEnd): Node = {
+    backEnds += BackEnd
     this
   }
 
-  def broadcastBinary(msg: Message, filter: Route => Boolean = _ => true): Node = {
-    broadcastImpl(msg, route => route.connection.sendBinary(msg), filter)
-    this
-  }
-
-  def broadcastPreferred(msg: Message, filter: Route => Boolean = _ => true): Node = {
-    broadcastImpl(msg, route => route.connection.sendPreferred(msg), filter)
-    this
-  }
-
-  def getProvider[T <: RouteProvider: ClassTag](): T = {
+  def getBackEnd[T <: BackEnd: ClassTag](): T = {
     val cls = scala.reflect.classTag[T].runtimeClass
-    routeProviders
+    backEnds
       .find(_.getClass == cls)
-      .getOrElse(throw new BackendException(s"Unable to get provider $cls", null))
+      .getOrElse(throw new MNetException(s"Unable to get provider $cls", null))
       .asInstanceOf[T]
   }
 
   def announce() {
-    broadcastJson(createAnnouncement())
+    broadcast(createAnnouncement())
   }
 
   /**
@@ -139,7 +123,7 @@ class Node(
       handleConnect(route)
     }
 
-    broadcastJson(msg, _ != route)
+    broadcast(msg, _ != route)
 
   }
 
@@ -165,14 +149,14 @@ class Node(
         handleMessage(message, route)
       } else {
         routes.get(message.getTargetId) match {
-          case Some(route) => route.connection.sendPreferred(message)
+          case Some(route) => route.send(message)
           case _ =>
         }
       }
     } // Broadcast
     else {
       handleMessage(message, route)
-      broadcastPreferred(message, _ != route.getOrElse(null))
+      broadcast(message, _ != route.getOrElse(null))
     }
 
   }
@@ -184,12 +168,10 @@ class Node(
       .setSenderId(id)
   }
 
-  protected final def sendImpl(
-    msg: Message,
-    sendFunc: Route => Unit): Node = {
+  protected final def sendImpl(msg: Message): Node = {
     if (msg.getHops < msg.getMaxHops && msg.hasTargetId) {
       routes.get(msg.getTargetId) match {
-        case Some(route) => sendFunc(route)
+        case Some(route) => route.send(msg)
         case _ =>
       }
     }
@@ -198,13 +180,11 @@ class Node(
 
   protected final def broadcastImpl(
     msg: Message,
-    sendFunc: Route => Unit,
     filter: Route => Boolean = _ => true): Node = {
     if (msg.getHops < msg.getMaxHops) {
       for ((_, route) <- neighbors) {
         if (filter(route) && route.endpointId != msg.getSenderId) {
-          msg.setTargetId(route.endpointId)
-          sendFunc(route)
+          route.send(msg)
         }
       }
     }

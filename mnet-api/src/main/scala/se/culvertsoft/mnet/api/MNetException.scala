@@ -1,8 +1,8 @@
-package se.culvertsoft.mnet.backend
+package se.culvertsoft.mnet.api
 
 import java.lang.Exception
 
-class BackendException(
+class MNetException(
   val msg: String,
   val reason: Exception,
   val connection: AnyRef) extends RuntimeException(msg, reason) {

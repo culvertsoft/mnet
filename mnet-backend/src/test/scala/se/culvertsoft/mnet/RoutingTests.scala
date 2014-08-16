@@ -8,8 +8,8 @@ import scala.collection.mutable.ArrayBuffer
 import org.junit.Test
 
 import TestUtils.assertWithin2sec
-import se.culvertsoft.mnet.backend.Node
-import se.culvertsoft.mnet.backend.WebSockProvider
+import se.culvertsoft.mnet.api.Node
+import se.culvertsoft.mnet.backend.WebSockBackEnd
 
 class RoutingTests {
 
@@ -24,7 +24,7 @@ class RoutingTests {
       .newNode(portMaker.nextPort)()
       .start()
 
-    val tgtPort = firstNode.getProvider[WebSockProvider].listenPort
+    val tgtPort = firstNode.getBackEnd[WebSockBackEnd].listenPort
 
     for (i <- 0 until n) {
       val node = TestUtils
@@ -35,7 +35,7 @@ class RoutingTests {
 
     for (node <- nodes) {
       if (node != firstNode) {
-        val myProvider = node.getProvider[WebSockProvider]
+        val myProvider = node.getBackEnd[WebSockBackEnd]
         myProvider.addOutboundConnection(tgtPort)
       }
     }
@@ -64,8 +64,8 @@ class RoutingTests {
 
     for (node <- nodes) {
       if (node != firstNode) {
-        val tgtPort = node.getProvider[WebSockProvider].listenPort
-        val myProvider = firstNode.getProvider[WebSockProvider]
+        val tgtPort = node.getBackEnd[WebSockBackEnd].listenPort
+        val myProvider = firstNode.getBackEnd[WebSockBackEnd]
         myProvider.addOutboundConnection(tgtPort)
       }
     }
@@ -119,8 +119,8 @@ class RoutingTests {
     assertWithin2sec(rightCenter.getRoutes.size == 3)
     assertWithin2sec(rightMost.getRoutes.size == 3)
 
-    rightMost.sendPreferred(new DataMessage().setTargetId(leftMost.id))
-    leftMost.sendPreferred(new DataMessage().setTargetId(rightMost.id))
+    rightMost.send(new DataMessage().setTargetId(leftMost.id))
+    leftMost.send(new DataMessage().setTargetId(rightMost.id))
 
     assertWithin2sec(leftMostCollect.nonEmpty)
     assertWithin2sec(rightMostCollect.nonEmpty)
@@ -154,8 +154,8 @@ class RoutingTests {
   }
 
   private def bridge(from: Node, to: Node) {
-    val wsFrom = from.getProvider[WebSockProvider]
-    val wsTo = to.getProvider[WebSockProvider]
+    val wsFrom = from.getBackEnd[WebSockBackEnd]
+    val wsTo = to.getBackEnd[WebSockBackEnd]
     wsFrom.addOutboundConnection(wsTo.listenPort)
   }
 

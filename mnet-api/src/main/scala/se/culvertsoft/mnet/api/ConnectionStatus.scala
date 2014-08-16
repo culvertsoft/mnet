@@ -1,7 +1,7 @@
 package se.culvertsoft.mnet.api
 
-abstract class ConnectionStatus(val isConnected: Boolean)
+abstract class ConnectionStatus
 
-case object Connected extends ConnectionStatus(true)
-case object Connecting extends ConnectionStatus(false)
-case object Disconnected extends ConnectionStatus(false)
+case object Connected extends ConnectionStatus
+case object Connecting extends ConnectionStatus
+case object Disconnected extends ConnectionStatus
