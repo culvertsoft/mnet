@@ -2,6 +2,7 @@ package se.culvertsoft.mnet.backend
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+import scala.util.Random
 
 import se.culvertsoft.mnet.IdCreateReply
 import se.culvertsoft.mnet.IdCreateRequest
@@ -10,34 +11,44 @@ import se.culvertsoft.mnet.NodeAnnouncement
 import se.culvertsoft.mnet.NodeUUID
 import se.culvertsoft.mnet.api.MTCommandQue
 
-class NodeConnectionHandler(node_dont_use_here: NodeCallbackIfc) extends MTCommandQue[NodeCallbackIfc](node_dont_use_here) {
+class NodeConnectionHandler(
+  node_dont_use_here: Node,
+  announceDt: Double,
+  fuzzyDt: Boolean = true) extends MTCommandQue[Node](node_dont_use_here) {
 
   private val conn2Id = new HashMap[Connection, ArrayBuffer[NodeUUID]]
   private val routes = new HashMap[NodeUUID, Route]
+  private var lastAnnounce = time
+
+  override def step(node: Node) {
+    if (time - lastAnnounce > announceDt) {
+      val fuzz = if (fuzzyDt) Random.nextFloat * announceDt * 0.2 else 0.0
+      lastAnnounce = time + fuzz
+      node.announce()
+    }
+  }
 
   def onMessage(conn: Connection, msg: Message) {
 
     incMsgHops(msg)
-    
-    queCommand { backEnd =>
+
+    queCommand { node =>
 
       msg match {
 
         case msg: NodeAnnouncement =>
-
-          println(s"${backEnd.createAnnouncement.getSenderId.getLsb} got ${msg.getSenderId.getLsb} from $conn")
 
           if (!msg.hasSenderId)
             throw new BackendException(s"${msg._typeName} from $conn missing senderId", conn)
 
           routes.get(msg.getSenderId) match {
             case x @ Some(route) =>
-              backEnd.onMessage(msg, x)
-              backEnd.onAnnounce(msg, route)
+              node.onMessage(msg, x)
+              node.onAnnounce(msg, route)
             case None =>
               val route = new Route(msg.getSenderId, conn)
               addEndpoint(msg, conn, route)
-              backEnd.onAnnounce(msg, route)
+              node.onAnnounce(msg, route)
           }
 
         case msg: IdCreateRequest =>
@@ -45,7 +56,7 @@ class NodeConnectionHandler(node_dont_use_here: NodeCallbackIfc) extends MTComma
 
         case msg =>
 
-          backEnd.onMessage(msg,
+          node.onMessage(msg,
             if (msg.hasSenderId) routes.get(msg.getSenderId)
             else None)
 
@@ -54,20 +65,20 @@ class NodeConnectionHandler(node_dont_use_here: NodeCallbackIfc) extends MTComma
   }
 
   def onConnect(conn: Connection) {
-    queCommand { backEnd =>
-      conn.sendJson(backEnd.createAnnouncement())
+    queCommand { node =>
+      conn.sendJson(node.createAnnouncement())
     }
   }
 
   def onError(error: Exception, item: Connection) {
-    queCommand { backEnd =>
-      backEnd.onError(error, item)
+    queCommand { node =>
+      node.onError(error, item)
     }
   }
 
   def onDisconnect(reason: String, conn: Connection) {
 
-    queCommand { backEnd =>
+    queCommand { node =>
       val removedRoutes: Seq[Route] = {
         conn2Id.remove(conn) match {
           case Some(items) => items.map(routes.remove(_).get)
@@ -75,17 +86,14 @@ class NodeConnectionHandler(node_dont_use_here: NodeCallbackIfc) extends MTComma
         }
       }
 
-      removedRoutes.foreach(backEnd.onDisconnect(_, reason))
+      removedRoutes.foreach(node.onDisconnect(_, reason))
     }
 
   }
 
   private def addEndpoint(msg: NodeAnnouncement, conn: Connection, route: Route) {
-
-    queCommand { backEnd =>
-      conn2Id.getOrElse(conn, new ArrayBuffer) += (msg.getSenderId)
-      routes.put(msg.getSenderId, route)
-    }
+    conn2Id.getOrElse(conn, new ArrayBuffer) += (msg.getSenderId)
+    routes.put(msg.getSenderId, route)
   }
 
   private final def incMsgHops(msg: Message) {
@@ -94,6 +102,10 @@ class NodeConnectionHandler(node_dont_use_here: NodeCallbackIfc) extends MTComma
     if (!msg.hasMaxHops())
       msg.setMaxHops(3)
     msg.setHops((msg.getHops + 1).toByte)
+  }
+
+  def time(): Double = {
+    System.nanoTime() / 1e9
   }
 
 }

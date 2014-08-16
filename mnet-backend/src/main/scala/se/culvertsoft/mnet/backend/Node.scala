@@ -1,6 +1,5 @@
 package se.culvertsoft.mnet.backend
 
-import scala.annotation.migration
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.reflect.ClassTag
@@ -9,14 +8,14 @@ import se.culvertsoft.mnet.Message
 import se.culvertsoft.mnet.NodeAnnouncement
 import se.culvertsoft.mnet.NodeUUID
 
-class Node extends NodeCallbackIfc {
+class Node(announceDt: Double = 0.5) {
 
   val id = MkId()
 
   private val neighbors = new HashMap[NodeUUID, Route]
   private val routes = new HashMap[NodeUUID, Route]
   private val routeProviders = new ArrayBuffer[RouteProvider]
-  private val connectionHandler = new NodeConnectionHandler(this)
+  private val connectionHandler = new NodeConnectionHandler(this, announceDt)
 
   @volatile var routesView: Array[Route] = Array[Route]()
 
@@ -43,8 +42,8 @@ class Node extends NodeCallbackIfc {
   }
 
   def stop(): Node = {
-    routeProviders.foreach(_.stop())
     connectionHandler.stop()
+    routeProviders.foreach(_.stop())
     this
   }
 
@@ -78,6 +77,10 @@ class Node extends NodeCallbackIfc {
       .getOrElse(throw new BackendException(s"Unable to get provider $cls", null))
       .asInstanceOf[T]
   }
+  
+  def announce() {
+    broadcastJson(createAnnouncement())
+  }
 
   /**
    * ****************************************
@@ -106,12 +109,12 @@ class Node extends NodeCallbackIfc {
   /**
    * ****************************************
    *
-   * 			PRIVATE
+   * 		For route providers to use
    *
    * ***************************************
    */
 
-  override def onAnnounce(msg: NodeAnnouncement, route: Route) {
+  def onAnnounce(msg: NodeAnnouncement, route: Route) {
 
     if (msg.getHops == 1) {
       neighbors.put(route.endpointId, route)
@@ -127,7 +130,7 @@ class Node extends NodeCallbackIfc {
 
   }
 
-  override def onDisconnect(route: Route, reason: String) {
+  def onDisconnect(route: Route, reason: String) {
     neighbors.remove(route.endpointId)
     if (routes.get(route.endpointId) == route) {
       routes.remove(route.endpointId)
@@ -135,15 +138,15 @@ class Node extends NodeCallbackIfc {
     }
   }
 
-  override def onError(error: Exception, endPoint: AnyRef) {
+  def onError(error: Exception, endPoint: AnyRef) {
     handleError(error, endPoint)
   }
 
-  override def onMessage(message: Message, route: Option[Route]) {
+  def onMessage(message: Message, route: Option[Route]) {
     handleMessage(message, route)
   }
 
-  override def createAnnouncement(): NodeAnnouncement = {
+  def createAnnouncement(): NodeAnnouncement = {
     new NodeAnnouncement().setSenderId(id)
   }
 

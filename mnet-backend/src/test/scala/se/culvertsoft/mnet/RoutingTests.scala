@@ -1,18 +1,19 @@
 package se.culvertsoft.mnet
 
-import java.util.concurrent.ConcurrentLinkedQueue
-import org.junit.Test
-import TestUtils._
-import se.culvertsoft.mnet.backend.WebSockProvider
 import scala.collection.mutable.ArrayBuffer
+
+import org.junit.Test
+
+import TestUtils.assertWithin1sec
 import se.culvertsoft.mnet.backend.Node
+import se.culvertsoft.mnet.backend.WebSockProvider
 
 class RoutingTests {
 
   @Test
   def manyToOne() {
 
-    val n = 3
+    val n = 20
     val nodes = new ArrayBuffer[Node]
 
     try {
@@ -38,13 +39,6 @@ class RoutingTests {
         }
       }
 
-      Thread.sleep(1000)
-
-      println(firstNode.getRoutes.size)
-
-      for (node <- nodes) {
-        println(node.getRoutes.size)
-      }
       assertWithin1sec(nodes.forall(_.getRoutes.size == n))
 
     } finally {

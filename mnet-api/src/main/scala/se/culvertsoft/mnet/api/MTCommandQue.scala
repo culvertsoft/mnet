@@ -4,7 +4,9 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.LinkedList
 
-class MTCommandQue[CommandTarget](target: CommandTarget) {
+class MTCommandQue[CommandTarget](
+  target: CommandTarget,
+  waitTime: Int = 10) {
   type Command = CommandTarget => Unit
 
   private var toLive = false
@@ -15,7 +17,8 @@ class MTCommandQue[CommandTarget](target: CommandTarget) {
       cmds.synchronized {
         while (toLive) {
           while (process(cmds.poll())) {}
-          cmds.wait(10)
+          step(target)
+          cmds.wait(waitTime)
         }
       }
     }
@@ -60,6 +63,9 @@ class MTCommandQue[CommandTarget](target: CommandTarget) {
       cmds.add(cmd)
       cmds.notify()
     }
+  }
+
+  def step(target: CommandTarget) {
   }
 
 }
