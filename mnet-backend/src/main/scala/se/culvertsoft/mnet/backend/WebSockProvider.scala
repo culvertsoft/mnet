@@ -9,7 +9,6 @@ import scala.collection.mutable.ArrayBuffer
 class WebSockProvider(_settings: BackendConfiguration) extends RouteProvider {
   val settings = _settings.deepCopy()
 
-  // Kept so we can close them (they have slave threads)
   private var backEnd: NodeCallbackIfc = null
   private val listeningIfcs = new ArrayBuffer[WebsockInHandler]
   private val connectingTo = new ArrayBuffer[WebsockOutHandler]
@@ -39,8 +38,8 @@ class WebSockProvider(_settings: BackendConfiguration) extends RouteProvider {
   }
 
   override def stop() {
-    listeningIfcs.foreach(_.stop())
     connectingTo.foreach(_.stop())
+    listeningIfcs.foreach(_.stop())
   }
 
   def listenPort(): Int = {

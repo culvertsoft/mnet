@@ -15,35 +15,32 @@ import org.java_websocket.server.DefaultWebSocketServerFactory
 import org.java_websocket.server.WebSocketServer
 
 import se.culvertsoft.mnet.Message
+import se.culvertsoft.mnet.api.ConfigureSocket
 
 class WebsockInHandler(
   backEnd: NodeCallbackIfc,
   addr: InetSocketAddress,
   useTcpNoDelay: Boolean) extends WebSocketServer(addr) {
 
-  if (useTcpNoDelay) {
-    super.setWebSocketFactory(new DefaultWebSocketServerFactory() {
+  super.setWebSocketFactory(new DefaultWebSocketServerFactory() {
 
-      override def createWebSocket(a: WebSocketAdapter, d: Draft, s: Socket): WebSocketImpl = {
-        if (s != null)
-          s.setTcpNoDelay(true)
-        super.createWebSocket(a, d, s)
-      }
+    override def createWebSocket(a: WebSocketAdapter, d: Draft, s: Socket): WebSocketImpl = {
+      ConfigureSocket(s, useTcpNoDelay)
+      super.createWebSocket(a, d, s)
+    }
 
-      override def createWebSocket(a: WebSocketAdapter, d: java.util.List[Draft], s: Socket): WebSocketImpl = {
-        if (s != null)
-          s.setTcpNoDelay(true)
-        super.createWebSocket(a, d, s)
-      }
+    override def createWebSocket(a: WebSocketAdapter, d: java.util.List[Draft], s: Socket): WebSocketImpl = {
+      ConfigureSocket(s, useTcpNoDelay)
+      super.createWebSocket(a, d, s)
+    }
 
-      override def wrapChannel(channel: SocketChannel, key: SelectionKey): SocketChannel = {
-        if (channel != null && channel.socket() != null)
-          channel.socket.setTcpNoDelay(true)
-        super.wrapChannel(channel, key)
-      }
+    override def wrapChannel(channel: SocketChannel, key: SelectionKey): SocketChannel = {
+      if (channel != null)
+        ConfigureSocket(channel.socket, useTcpNoDelay)
+      super.wrapChannel(channel, key)
+    }
 
-    })
-  }
+  })
 
   private val serializer = new WebsockSerializer
   private val handler = new ConnectionHandler(backEnd)

@@ -16,10 +16,19 @@ import org.java_websocket.drafts.Draft_10
 import org.java_websocket.handshake.ServerHandshake
 
 class ReconnectingWebsocket(
-  val serverUri: URI = new URI("ws://localhost:80"),
+  val serverUri: URI,
   val useTcpNoDelay: Boolean = true,
   val timeout: Int = 0) {
-  def this(addr: String, port: Int) = this(new URI(s"ws://$addr:$port"))
+
+  def this(
+    addr: String,
+    port: Int,
+    useTcpNoDelay: Boolean) =
+    this(
+      new URI(s"ws://$addr:$port"),
+      useTcpNoDelay)
+
+  private val monitor = new Object
 
   /**
    * *********************************
@@ -52,7 +61,11 @@ class ReconnectingWebsocket(
   }
 
   final def stop() = {
-    m_toLive = false
+    monitor.synchronized {
+      m_toLive = false
+      monitor.notify()
+    }
+    m_thread.join(500)
     this
   }
 
@@ -121,13 +134,16 @@ class ReconnectingWebsocket(
 
   private val m_thread = new Thread {
     override def run() {
-      while (m_toLive) {
-        m_status match {
-          case Disconnected => reconnect()
-          case _ if (m_forceReconnect) => reconnect()
-          case _ =>
+      monitor.synchronized {
+        while (m_toLive) {
+          m_status match {
+            case Disconnected => reconnect()
+            case _ if (m_forceReconnect) => reconnect()
+            case _ =>
+          }
+          monitor.wait(1000)
         }
-        Thread.sleep(1000)
+        m_status = Disconnected
       }
       m_currentWebsocket.close()
     }
@@ -143,28 +159,24 @@ class ReconnectingWebsocket(
     m_status = Connecting
     m_currentWebsocket = new WebSocketClient(serverUri, new Draft_10, null, timeout) {
 
-      if (useTcpNoDelay) {
-        setWebSocketFactory(new DefaultWebSocketClientFactory(this) {
+      setWebSocketFactory(new DefaultWebSocketClientFactory(this) {
 
-          override def createWebSocket(a: WebSocketAdapter, d: Draft, s: Socket): WebSocket = {
-            if (s != null)
-              s.setTcpNoDelay(true)
-            super.createWebSocket(a, d, s)
-          }
+        override def createWebSocket(a: WebSocketAdapter, d: Draft, s: Socket): WebSocket = {
+          ConfigureSocket(s, useTcpNoDelay)
+          super.createWebSocket(a, d, s)
+        }
 
-          override def createWebSocket(a: WebSocketAdapter, d: java.util.List[Draft], s: Socket): WebSocket = {
-            if (s != null)
-              s.setTcpNoDelay(true)
-            super.createWebSocket(a, d, s)
-          }
+        override def createWebSocket(a: WebSocketAdapter, d: java.util.List[Draft], s: Socket): WebSocket = {
+          ConfigureSocket(s, useTcpNoDelay)
+          super.createWebSocket(a, d, s)
+        }
 
-          override def wrapChannel(channel: SocketChannel, c: SelectionKey, host: String, port: Int): ByteChannel = {
-            if (channel != null && channel.socket != null)
-              channel.socket.setTcpNoDelay(true)
-            super.wrapChannel(channel, c, host, port)
-          }
-        })
-      }
+        override def wrapChannel(channel: SocketChannel, c: SelectionKey, host: String, port: Int): ByteChannel = {
+          if (channel != null)
+            ConfigureSocket(channel.socket, useTcpNoDelay)
+          super.wrapChannel(channel, c, host, port)
+        }
+      })
 
       override def onOpen(handshakedata: ServerHandshake) {
         m_status = Connected

@@ -26,11 +26,11 @@ class Node {
    * ***************************************
    */
 
-  def viewRoutes(): Seq[Route] = {
+  def getRoutes(): Seq[Route] = {
     routes.values.toSeq
   }
 
-  def viewProviders(): Seq[RouteProvider] = {
+  def getProviders(): Seq[RouteProvider] = {
     new ArrayBuffer[RouteProvider] ++ routeProviders.toSeq
   }
 
@@ -92,7 +92,7 @@ class Node {
   }
 
   def handleError(error: Exception, endPoint: AnyRef) {
-
+	  error.printStackTrace()
   }
 
   def handleMessage(message: Message, route: Option[Route]) {
