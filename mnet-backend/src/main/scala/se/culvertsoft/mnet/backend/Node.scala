@@ -134,6 +134,7 @@ class Node(announceDt: Double = 0.5) {
     neighbors.remove(route.endpointId)
     routes.remove(route.endpointId) match {
       case Some(r: Route) if (r == route) =>
+        routesView = routes.values.toArray
         handleDisconnect(route, reason)
       case _ =>
     }
