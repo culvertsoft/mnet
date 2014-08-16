@@ -16,7 +16,7 @@ object TestUtils {
 
   def newNode(port: Int)(msgHandler: Message => Unit = _ => Unit): Node = {
     val settings = getTestCfg(port)
-    new Node() {
+    new Node(settings) {
       override def handleMessage(message: Message, route: Option[Route]) {
         msgHandler(message)
       }

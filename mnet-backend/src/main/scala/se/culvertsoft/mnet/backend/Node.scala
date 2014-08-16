@@ -8,14 +8,18 @@ import se.culvertsoft.mnet.Message
 import se.culvertsoft.mnet.NodeAnnouncement
 import se.culvertsoft.mnet.NodeUUID
 
-class Node(announceDt: Double = 0.5) {
+class Node(
+  val name: String,
+  val tags: java.util.ArrayList[String],
+  val announceInterval: Double) {
+  def this(settings: BackendConfiguration) = this(settings.getName, settings.getTags, settings.getAnnounceInterval)
 
   val id = MkId()
 
   private val neighbors = new HashMap[NodeUUID, Route]
   private val routes = new HashMap[NodeUUID, Route]
   private val routeProviders = new ArrayBuffer[RouteProvider]
-  private val connectionHandler = new NodeConnectionHandler(this, announceDt)
+  private val connectionHandler = new NodeConnectionHandler(this)
 
   @volatile var routesView: Array[Route] = Array[Route]()
 
@@ -174,7 +178,10 @@ class Node(announceDt: Double = 0.5) {
   }
 
   def createAnnouncement(): NodeAnnouncement = {
-    new NodeAnnouncement().setSenderId(id)
+    new NodeAnnouncement()
+      .setName(name)
+      .setTags(tags)
+      .setSenderId(id)
   }
 
   protected final def sendImpl(

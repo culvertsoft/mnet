@@ -13,7 +13,6 @@ import se.culvertsoft.mnet.api.MTCommandQue
 
 class NodeConnectionHandler(
   node_dont_use_here: Node,
-  announceDt: Double,
   fuzzyDt: Boolean = true) extends MTCommandQue[Node](node_dont_use_here) {
 
   private val conn2Id = new HashMap[Connection, ArrayBuffer[NodeUUID]]
@@ -21,8 +20,8 @@ class NodeConnectionHandler(
   private var lastAnnounce = time
 
   override def step(node: Node) {
-    if (time - lastAnnounce > announceDt) {
-      val fuzz = if (fuzzyDt) Random.nextFloat * announceDt * 0.2 else 0.0
+    if (time - lastAnnounce > node.announceInterval) {
+      val fuzz = if (fuzzyDt) Random.nextFloat * node.announceInterval * 0.2 else 0.0
       lastAnnounce = time + fuzz
       node.announce()
     }
