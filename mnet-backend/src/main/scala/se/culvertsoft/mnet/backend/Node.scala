@@ -132,9 +132,9 @@ class Node(announceDt: Double = 0.5) {
 
   def onDisconnect(route: Route, reason: String) {
     neighbors.remove(route.endpointId)
-    routes.remove(route.endpointId) match {
+    routes.get(route.endpointId) match {
       case Some(r: Route) if (r == route) =>
-        routesView = routes.values.toArray
+        routes.remove(route.endpointId)
         handleDisconnect(route, reason)
       case _ =>
     }
