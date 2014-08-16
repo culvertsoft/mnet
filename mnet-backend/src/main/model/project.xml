@@ -12,11 +12,4 @@
         <classregistry_path>se.culvertsoft.mnet.backend</classregistry_path>
     </Generator>
     
-    <Generator name="C++">
-        <class_path>se.culvertsoft.mgen.cpppack.generator.CppGenerator</class_path>
-        <output_path>src_generated/main/cpp</output_path>
-        <classregistry_path>se.culvertsoft.mnet.backend</classregistry_path>
-        <generate_unity_build>true</generate_unity_build>
-    </Generator>
-    
 </Project>
