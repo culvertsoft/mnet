@@ -187,10 +187,6 @@ class Node(
   protected final def sendImpl(
     msg: Message,
     sendFunc: Route => Unit): Node = {
-
-    if (!msg.hasSenderId)
-      msg.setSenderId(id)
-
     if (msg.getHops < msg.getMaxHops && msg.hasTargetId) {
       routes.get(msg.getTargetId) match {
         case Some(route) => sendFunc(route)
@@ -204,10 +200,6 @@ class Node(
     msg: Message,
     sendFunc: Route => Unit,
     filter: Route => Boolean = _ => true): Node = {
-
-    if (!msg.hasSenderId)
-      msg.setSenderId(id)
-
     if (msg.getHops < msg.getMaxHops) {
       for ((_, route) <- neighbors) {
         if (filter(route) && route.endpointId != msg.getSenderId) {
