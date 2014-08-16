@@ -61,6 +61,10 @@ object TestUtils {
     assert(within(1)(f))
   }
     
+  def assertWithin2sec(f: => Boolean) {
+    assert(within(2)(f))
+  }
+  
   def assertFor1sec(f: => Boolean) {
     assert(forT(1)(f))
   }

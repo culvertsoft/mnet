@@ -1,12 +1,15 @@
 package se.culvertsoft.mnet
 
+import java.util.concurrent.ConcurrentLinkedQueue
+
+import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.mutable.ArrayBuffer
+
 import org.junit.Test
-import TestUtils.assertWithin1sec
+
+import TestUtils.assertWithin2sec
 import se.culvertsoft.mnet.backend.Node
 import se.culvertsoft.mnet.backend.WebSockProvider
-import java.util.concurrent.ConcurrentLinkedQueue
-import scala.collection.JavaConversions._
 
 class RoutingTests {
 
@@ -37,7 +40,7 @@ class RoutingTests {
       }
     }
 
-    assertWithin1sec(nodes.forall(_.getRoutes.size == n))
+    assertWithin2sec(nodes.forall(_.getRoutes.size == n))
 
   }
 
@@ -67,7 +70,7 @@ class RoutingTests {
       }
     }
 
-    assertWithin1sec(nodes.forall(_.getRoutes.size == n))
+    assertWithin2sec(nodes.forall(_.getRoutes.size == n))
 
   }
 
@@ -85,10 +88,10 @@ class RoutingTests {
     bridge(leftCenter, rightCenter)
     bridge(rightCenter, rightMost)
 
-    assertWithin1sec(leftMost.getRoutes.size == 3)
-    assertWithin1sec(leftCenter.getRoutes.size == 3)
-    assertWithin1sec(rightCenter.getRoutes.size == 3)
-    assertWithin1sec(rightMost.getRoutes.size == 3)
+    assertWithin2sec(leftMost.getRoutes.size == 3)
+    assertWithin2sec(leftCenter.getRoutes.size == 3)
+    assertWithin2sec(rightCenter.getRoutes.size == 3)
+    assertWithin2sec(rightMost.getRoutes.size == 3)
 
   }
 
@@ -111,18 +114,18 @@ class RoutingTests {
     bridge(leftCenter, rightCenter)
     bridge(rightCenter, rightMost)
 
-    assertWithin1sec(leftMost.getRoutes.size == 3)
-    assertWithin1sec(leftCenter.getRoutes.size == 3)
-    assertWithin1sec(rightCenter.getRoutes.size == 3)
-    assertWithin1sec(rightMost.getRoutes.size == 3)
+    assertWithin2sec(leftMost.getRoutes.size == 3)
+    assertWithin2sec(leftCenter.getRoutes.size == 3)
+    assertWithin2sec(rightCenter.getRoutes.size == 3)
+    assertWithin2sec(rightMost.getRoutes.size == 3)
 
     rightMost.sendPreferred(new DataMessage().setTargetId(leftMost.id))
     leftMost.sendPreferred(new DataMessage().setTargetId(rightMost.id))
 
-    assertWithin1sec(leftMostCollect.nonEmpty)
-    assertWithin1sec(rightMostCollect.nonEmpty)
-    assertWithin1sec(leftCenterCollect.isEmpty)
-    assertWithin1sec(rightCenterCollect.isEmpty)
+    assertWithin2sec(leftMostCollect.nonEmpty)
+    assertWithin2sec(rightMostCollect.nonEmpty)
+    assertWithin2sec(leftCenterCollect.isEmpty)
+    assertWithin2sec(rightCenterCollect.isEmpty)
 
   }
 
@@ -142,11 +145,11 @@ class RoutingTests {
     bridge(center, rightCenter)
     bridge(rightCenter, rightMost)
 
-    assertWithin1sec(leftMost.getRoutes.size == 3)
-    assertWithin1sec(leftCenter.getRoutes.size == 4)
-    assertWithin1sec(center.getRoutes.size == 4)
-    assertWithin1sec(rightCenter.getRoutes.size == 4)
-    assertWithin1sec(rightMost.getRoutes.size == 3)
+    assertWithin2sec(leftMost.getRoutes.size == 3)
+    assertWithin2sec(leftCenter.getRoutes.size == 4)
+    assertWithin2sec(center.getRoutes.size == 4)
+    assertWithin2sec(rightCenter.getRoutes.size == 4)
+    assertWithin2sec(rightMost.getRoutes.size == 3)
 
   }
 
