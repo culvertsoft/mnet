@@ -50,4 +50,8 @@ class WebsockOutHandler(
     sendBinaryMessage(serializer.serializeBinary(msg))
   }
 
+  def sendPreferred(msg: Message) {
+    sendJson(msg)
+  }
+
 }

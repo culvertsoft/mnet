@@ -43,7 +43,6 @@ class NodeConnectionHandler(
 
           routes.get(msg.getSenderId) match {
             case x @ Some(route) =>
-              node.onMessage(msg, x)
               node.onAnnounce(msg, route)
             case None =>
               val route = new Route(msg.getSenderId, conn)

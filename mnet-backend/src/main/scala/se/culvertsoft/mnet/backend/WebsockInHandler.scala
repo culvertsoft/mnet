@@ -66,6 +66,7 @@ class WebsockInHandler(
   case class RichWebSock(socket: WebSocket) extends Connection {
     def sendJson(msg: Message) = synchronized { socket.send(serializer.serializeJson(msg)) }
     def sendBinary(msg: Message) = synchronized { socket.send(serializer.serializeBinary(msg)) }
+    def sendPreferred(msg: Message) { sendJson(msg) }
   }
 
 }

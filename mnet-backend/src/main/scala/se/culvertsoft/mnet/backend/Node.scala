@@ -55,6 +55,10 @@ class Node(announceDt: Double = 0.5) {
     sendImpl(msg, route => route.connection.sendBinary(msg))
   }
 
+  def sendPreferred(msg: Message): Node = {
+    sendImpl(msg, route => route.connection.sendPreferred(msg))
+  }
+
   def addRouteProvider(routeProvider: RouteProvider): Node = {
     routeProviders += routeProvider
     this
@@ -67,6 +71,11 @@ class Node(announceDt: Double = 0.5) {
 
   def broadcastBinary(msg: Message, filter: Route => Boolean = _ => true): Node = {
     broadcastImpl(msg, route => route.connection.sendBinary(msg), filter)
+    this
+  }
+
+  def broadcastPreferred(msg: Message, filter: Route => Boolean = _ => true): Node = {
+    broadcastImpl(msg, route => route.connection.sendPreferred(msg), filter)
     this
   }
 
@@ -145,7 +154,23 @@ class Node(announceDt: Double = 0.5) {
   }
 
   def onMessage(message: Message, route: Option[Route]) {
-    handleMessage(message, route)
+
+    // Targeted
+    if (message.hasTargetId) {
+      if (message.getTargetId == id) {
+        handleMessage(message, route)
+      } else {
+        routes.get(message.getTargetId) match {
+          case Some(route) => route.connection.sendPreferred(message)
+          case _ =>
+        }
+      }
+    } // Broadcast
+    else {
+      handleMessage(message, route)
+      broadcastPreferred(message, _ != route.getOrElse(null))
+    }
+
   }
 
   def createAnnouncement(): NodeAnnouncement = {
@@ -155,6 +180,10 @@ class Node(announceDt: Double = 0.5) {
   protected final def sendImpl(
     msg: Message,
     sendFunc: Route => Unit): Node = {
+
+    if (!msg.hasSenderId)
+      msg.setSenderId(id)
+
     if (msg.getHops < msg.getMaxHops && msg.hasTargetId) {
       routes.get(msg.getTargetId) match {
         case Some(route) => sendFunc(route)
@@ -168,6 +197,10 @@ class Node(announceDt: Double = 0.5) {
     msg: Message,
     sendFunc: Route => Unit,
     filter: Route => Boolean = _ => true): Node = {
+
+    if (!msg.hasSenderId)
+      msg.setSenderId(id)
+
     if (msg.getHops < msg.getMaxHops) {
       for ((_, route) <- neighbors) {
         if (filter(route) && route.endpointId != msg.getSenderId) {
