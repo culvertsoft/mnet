@@ -77,7 +77,7 @@ class Node(announceDt: Double = 0.5) {
       .getOrElse(throw new BackendException(s"Unable to get provider $cls", null))
       .asInstanceOf[T]
   }
-  
+
   def announce() {
     broadcastJson(createAnnouncement())
   }
@@ -132,9 +132,10 @@ class Node(announceDt: Double = 0.5) {
 
   def onDisconnect(route: Route, reason: String) {
     neighbors.remove(route.endpointId)
-    if (routes.get(route.endpointId) == route) {
-      routes.remove(route.endpointId)
-      handleDisconnect(route, reason)
+    routes.remove(route.endpointId) match {
+      case Some(r: Route) if (r == route) =>
+        handleDisconnect(route, reason)
+      case _ =>
     }
   }
 
