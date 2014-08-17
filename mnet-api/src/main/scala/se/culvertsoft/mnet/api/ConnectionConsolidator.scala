@@ -66,7 +66,7 @@ class ConnectionConsolidator(
 
           if (!msg.hasSenderId)
             throw new MNetException(s"${msg._typeName} from $conn missing senderId", conn)
-
+          
           routes.get(msg.getSenderId) match {
             case x @ Some(route) =>
               node.onAnnounce(msg, route)
@@ -80,10 +80,18 @@ class ConnectionConsolidator(
           conn.send(new IdCreateReply().setCreatedId(NewNodeUUID()))
 
         case msg =>
-
-          node.onMessage(msg,
-            if (msg.hasSenderId) routes.get(msg.getSenderId)
-            else None)
+          
+          val fromRoute =
+            routes.get(msg.getSenderId) match {
+              case r @ Some(_) => r
+              case _ =>
+                conn2Id.get(conn) match {
+                  case Some(ids) if (ids.nonEmpty) => routes.get(ids.head)
+                  case _ => None
+                }
+            }
+          
+          node.onMessage(msg, fromRoute)
 
       }
     }
@@ -129,7 +137,7 @@ class ConnectionConsolidator(
   }
 
   private def addEndpoint(msg: NodeAnnouncement, conn: Connection, route: Route) {
-    conn2Id.getOrElse(conn, new ArrayBuffer) += (msg.getSenderId)
+    conn2Id.getOrElseUpdate(conn, new ArrayBuffer) += (msg.getSenderId)
     routes.put(msg.getSenderId, route)
   }
 

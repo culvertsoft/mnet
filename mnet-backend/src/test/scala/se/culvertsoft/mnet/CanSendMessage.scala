@@ -2,23 +2,22 @@ package se.culvertsoft.mnet
 
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.mutable.ArrayBuffer
-
 import org.junit.Test
-
 import TestUtils.assertFor01sec
 import TestUtils.assertWithin1sec
 import se.culvertsoft.mnet.backend.WebSockBackEnd
+import java.util.concurrent.ConcurrentLinkedQueue
 
 class CanSendMessage {
 
   @Test
   def canSendEachOtherMessages() {
 
-    val b1Msgs = new ArrayBuffer[Message]
-    val b2Msgs = new ArrayBuffer[Message]
+    val b1Msgs = new ConcurrentLinkedQueue[Message]
+    val b2Msgs = new ConcurrentLinkedQueue[Message]
 
-    val b1 = TestUtils.newNode(400)(b1Msgs += _).start()
-    val b2 = TestUtils.newNode(401)(b2Msgs += _).start()
+    val b1 = TestUtils.newNode(400)(b1Msgs.add).start()
+    val b2 = TestUtils.newNode(401)(b2Msgs.add).start()
 
     val ws1 = b1.getBackEnd[WebSockBackEnd]
     val ws2 = b2.getBackEnd[WebSockBackEnd]
@@ -34,7 +33,7 @@ class CanSendMessage {
 
     b1.broadcast(errMsgSentByB1)
     b2.broadcast(errMsgSentByB2)
-
+        
     assertWithin1sec(b1Msgs.size == 1 && b2Msgs.size == 1)
 
     b2.stop()

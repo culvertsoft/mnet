@@ -290,7 +290,6 @@ class Node(
   }
 
   /**
-   * b
    * Default broadcast implementation.
    */
   protected def broadcastImpl(
