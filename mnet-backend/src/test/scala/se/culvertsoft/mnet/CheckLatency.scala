@@ -39,12 +39,8 @@ class CheckLatency {
     val n = 10000
     var nRecvd = 0
     while (i < n) {
-      val t0 = getTime
       b2.broadcast(errMsgSentByB2)
-      while (b1Msgs.isEmpty) {
-        if (getTime - t0 > 0.1)
-          throw new RuntimeException("Latency test crashed or deadlocked")
-      }
+      while (b1Msgs.isEmpty) {}
       nRecvd += 1
       b1Msgs.clear()
       i += 1
