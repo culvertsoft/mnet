@@ -79,6 +79,13 @@ namespace mnet {
 			qDebug() << "WebSocket: got binary of size: " << message.size();
 		}
 
+		/**
+		* Called when there is a websocket error.
+		*/
+		virtual void onError(const QAbstractSocket::SocketError error) {
+			qDebug() << "WebSocket: got error: " << error;
+		}
+
 	Q_SIGNALS:
 		void reconnectOrQuit_signal();
 		void sendTextMessage_signal(const QString message);

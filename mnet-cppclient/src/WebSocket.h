@@ -35,6 +35,8 @@ namespace mnet {
 			connect(&m_webSocket, &QWebSocket::disconnected, receiver, &ReceiverType::onDisconnect, connectionType);
 			connect(&m_webSocket, &QWebSocket::textMessageReceived, receiver, &ReceiverType::onTextMessage, connectionType);
 			connect(&m_webSocket, &QWebSocket::binaryMessageReceived, receiver, &ReceiverType::onBinaryMessage, connectionType);
+			connect(&m_webSocket, static_cast<void (QWebSocket::*)(QAbstractSocket::SocketError)>(&QWebSocket::error), receiver, &ReceiverType::onError, connectionType);
+
 			connect(this, &WebSocket::sendTextMessage_signal, this, &WebSocket::sendTextMessage_slot);
 			connect(this, &WebSocket::sendBinaryMessage_signal, this, &WebSocket::sendBinaryMessage_slot);
 			m_webSocket.open(m_url);
@@ -56,6 +58,7 @@ namespace mnet {
 		void sendTextMessage(const QString message) {
 			Q_EMIT sendTextMessage_signal(message);
 		}
+
 
 		/**
 		* Emits the signal 'sendBinaryMessage_signal', which will be
