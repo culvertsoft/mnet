@@ -8,6 +8,7 @@ import se.culvertsoft.mnet.IdCreateReply
 import se.culvertsoft.mnet.IdCreateRequest
 import se.culvertsoft.mnet.Message
 import se.culvertsoft.mnet.NodeAnnouncement
+import se.culvertsoft.mnet.NodeSettings
 import se.culvertsoft.mnet.NodeUUID
 import se.culvertsoft.mnet.api.util.NewNodeUUID
 import se.culvertsoft.mnet.api.util.ThreadConsolidator
@@ -18,7 +19,7 @@ import se.culvertsoft.mnet.api.util.ThreadConsolidator
  */
 class ConnectionConsolidator(
   node_dont_use_here: Node,
-  fuzzyDt: Boolean = true,
+  settings: NodeSettings,
   iterationTime: Int = 10) extends ThreadConsolidator[Node](node_dont_use_here, iterationTime) {
 
   /**
@@ -41,8 +42,8 @@ class ConnectionConsolidator(
    * ConnectionConsolidator maintains. May be extended/overloaded.
    */
   override def step(node: Node) {
-    if (time - lastAnnounce > node.announceInterval) {
-      val fuzz = if (fuzzyDt) Random.nextFloat * node.announceInterval * 0.2 else 0.0
+    if (time - lastAnnounce > settings.getAnnounceInterval) {
+      val fuzz = Random.nextFloat * settings.getAnnounceInterval * 0.2
       lastAnnounce = time + fuzz
       node.announce()
     }
@@ -56,7 +57,7 @@ class ConnectionConsolidator(
    */
   def onMessage(conn: Connection, msg: Message) {
 
-    incMsgHops(msg)
+    handleMaxHops(msg)
 
     queCommand { node =>
 
@@ -66,7 +67,7 @@ class ConnectionConsolidator(
 
           if (!msg.hasSenderId)
             throw new MNetException(s"${msg._typeName} from $conn missing senderId", conn)
-          
+
           routes.get(msg.getSenderId) match {
             case x @ Some(route) =>
               node.onAnnounce(msg, route)
@@ -80,7 +81,7 @@ class ConnectionConsolidator(
           conn.send(new IdCreateReply().setCreatedId(NewNodeUUID()))
 
         case msg =>
-          
+
           val fromRoute =
             routes.get(msg.getSenderId) match {
               case r @ Some(_) => r
@@ -90,7 +91,7 @@ class ConnectionConsolidator(
                   case _ => None
                 }
             }
-          
+
           node.onMessage(msg, fromRoute)
 
       }
@@ -141,11 +142,13 @@ class ConnectionConsolidator(
     routes.put(msg.getSenderId, route)
   }
 
-  private final def incMsgHops(msg: Message) {
+  private final def handleMaxHops(msg: Message) {
     if (!msg.hasHops())
       msg.setHops(0)
     if (!msg.hasMaxHops())
-      msg.setMaxHops(3)
+      msg.setMaxHops(settings.getMaxHopsDefault.toByte)
+    if (msg.getMaxHops > settings.getMaxHopsLimit)
+      msg.setMaxHops(settings.getMaxHopsLimit.toByte)
     msg.setHops((msg.getHops + 1).toByte)
   }
 

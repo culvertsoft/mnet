@@ -30,11 +30,7 @@ import se.culvertsoft.mnet.api.util.NewNodeUUID
  * 		The time interval at which to send announcements on the network about this
  *   	Node's presence. Announcements are also send when initally connecting.
  */
-class Node(
-  val name: String,
-  val tags: java.util.List[String],
-  val announceInterval: Double) {
-  def this(settings: NodeSettings = new NodeSettings) = this(settings.getName, settings.getTags, settings.getAnnounceInterval)
+class Node(settings: NodeSettings = new NodeSettings) {
 
   /**
    * The unique NodeUUID of this node on the network.
@@ -60,7 +56,7 @@ class Node(
    * See ConnectionConsolidator. Briefly: Consolidates connection input from multiple
    * threads to a single event handling thread.
    */
-  private val connectionConsolidator = new ConnectionConsolidator(this)
+  private val connectionConsolidator = new ConnectionConsolidator(this, settings)
 
   /**
    * ****************************************
@@ -198,8 +194,8 @@ class Node(
    */
   def createAnnouncement(): NodeAnnouncement = {
     new NodeAnnouncement()
-      .setName(name)
-      .setTags(new java.util.ArrayList(tags))
+      .setName(settings.getName)
+      .setTags(settings.getTags)
       .setSenderId(id)
   }
 

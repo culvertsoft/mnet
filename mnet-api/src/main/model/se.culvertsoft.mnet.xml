@@ -14,6 +14,10 @@
             <name type="string">unnamed_node</name>
             <tags type="list[string]">[]</tags>
             <announceInterval type="Double">0.5</announceInterval>
+            <!-- Incoming messages no maxHops set will be capped here -->
+            <maxHopsDefault type="int">3</maxHopsDefault>
+            <!-- Incoming messages with a higher maxHops than this will be capped here -->
+            <maxHopsLimit type="int">4</maxHopsLimit>
         </NodeSettings>
         
         <NodeUUID>
