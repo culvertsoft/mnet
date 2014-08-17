@@ -16,32 +16,6 @@ namespace mnet {
 	public:
 
 		/**********************************************************
-		 *
-		 *
-		 *			OVERLOAD THESE FOR CALLBACKS
-		 *
-		 **********************************************************/
-
-		virtual void handleConnect() {
-			qDebug() << "WebSocket: connected";
-			// m_webSocket.sendTextMessage(QStringLiteral("Hello, world!"));
-		}
-
-		virtual void handleDisconnect() {
-			qDebug() << "WebSocket: disconnected";
-		}
-
-		virtual void handleTextMessage(const QString message) {
-			qDebug() << "Websocket: message received:" << message;
-		}
-
-		virtual void handleBinaryMessage(const QByteArray message) {
-			qDebug() << "Websocket: message received, size:" << message.size();
-		}
-
-	public:
-
-		/**********************************************************
 		*
 		*
 		*					PUBLIC API
@@ -52,11 +26,12 @@ namespace mnet {
 		* Creates a client and connects its signals and slots.
 		* Opens the underlying websocket.
 		*/
-		WebsocketClient(const QString& url, QObject *parent = Q_NULLPTR) : QObject(parent), m_url(url) {
-			connect(&m_webSocket, &QWebSocket::connected, this, &WebsocketClient::onConnect);
-			connect(&m_webSocket, &QWebSocket::disconnected, this, &WebsocketClient::onDisconnect);
-			connect(&m_webSocket, &QWebSocket::textMessageReceived, this, &WebsocketClient::onTextMessage);
-			connect(&m_webSocket, &QWebSocket::binaryMessageReceived, this, &WebsocketClient::onBinaryMessage);
+		template <typename ReceiverType>
+		WebsocketClient(const QString& url, ReceiverType * receiver) : m_url(url) {
+			connect(&m_webSocket, &QWebSocket::connected, receiver, &ReceiverType::onConnect);
+			connect(&m_webSocket, &QWebSocket::disconnected, receiver, &ReceiverType::onDisconnect);
+			connect(&m_webSocket, &QWebSocket::textMessageReceived, receiver, &ReceiverType::onTextMessage);
+			connect(&m_webSocket, &QWebSocket::binaryMessageReceived, receiver, &ReceiverType::onBinaryMessage);
 			connect(this, &WebsocketClient::sendTextMessage_signal, this, &WebsocketClient::sendTextMessage_slot);
 			connect(this, &WebsocketClient::sendBinaryMessage_signal, this, &WebsocketClient::sendBinaryMessage_slot);
 			m_webSocket.open(m_url);
@@ -92,11 +67,6 @@ namespace mnet {
 		void sendBinaryMessage_signal(const QByteArray message);
 
 	private Q_SLOTS:
-
-		void onConnect() { handleConnect(); }
-		void onDisconnect() { handleDisconnect(); }
-		void onTextMessage(const QString message) { handleTextMessage(message); }
-		void onBinaryMessage(const QByteArray message) { handleBinaryMessage(message); }
 		void sendTextMessage_slot(const QString message) { m_webSocket.sendTextMessage(message); }
 		void sendBinaryMessage_slot(const QByteArray message) { m_webSocket.sendBinaryMessage(message); }
 

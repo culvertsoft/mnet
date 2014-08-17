@@ -16,13 +16,12 @@ int main(int argc, char *argv[]) {
 
 	QSharedPointer<QCoreApplication> app = ensureQtAppOrCreateNew(argc, argv);
 
+	QEventLoop eventLoop;
+
 	mnet::WebSockThread client("ws://localhost:80");
 	client.start();
 
-	Sleep(500); // Take some time and wait for MNet connect announcement
-
-	client.stop();
-	client.wait();
+	eventLoop.exec();
 
 	return 0;
 
