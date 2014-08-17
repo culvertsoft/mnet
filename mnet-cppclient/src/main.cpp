@@ -16,8 +16,6 @@ int main(int argc, char *argv[]) {
 
 	QSharedPointer<QCoreApplication> app = ensureQtAppOrCreateNew(argc, argv);
 
-	QEventLoop eventLoop;
-
 	mnet::ReconnectingWebSocket client("ws://localhost:80", Qt::DirectConnection);
 	client.start();
 
