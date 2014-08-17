@@ -1,5 +1,7 @@
 package se.culvertsoft.mnet
 
+import scala.collection.JavaConversions.asScalaBuffer
+
 import org.junit.Test
 
 import TestUtils.for01sec

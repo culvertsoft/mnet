@@ -1,5 +1,6 @@
 package se.culvertsoft.mnet
 
+import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.mutable.ArrayBuffer
 
 import org.junit.Test

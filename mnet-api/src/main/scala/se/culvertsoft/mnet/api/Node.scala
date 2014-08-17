@@ -1,7 +1,11 @@
 package se.culvertsoft.mnet.api
 
+import java.util.ArrayList
+import java.util.concurrent.ConcurrentHashMap
+
+import scala.collection.JavaConversions.bufferAsJavaList
+import scala.collection.JavaConversions.mapAsScalaConcurrentMap
 import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
 import scala.reflect.ClassTag
 
 import se.culvertsoft.mnet.Message
@@ -28,7 +32,7 @@ import se.culvertsoft.mnet.api.util.NewNodeUUID
  */
 class Node(
   val name: String,
-  val tags: java.util.ArrayList[String],
+  val tags: java.util.List[String],
   val announceInterval: Double) {
   def this(settings: NodeSettings = new NodeSettings) = this(settings.getName, settings.getTags, settings.getAnnounceInterval)
 
@@ -39,15 +43,13 @@ class Node(
 
   /**
    * Currently detected neighbor nodes on the network.
-   * TODO: Make thread-safe
    */
-  private val neighbors = new HashMap[NodeUUID, Route]
+  private val neighbors = new ConcurrentHashMap[NodeUUID, Route]
 
   /**
    * Routing table from node IDs to endpoints.
-   * TODO: Make thread-safe
    */
-  private val routes = new HashMap[NodeUUID, Route]
+  private val routes = new ConcurrentHashMap[NodeUUID, Route]
 
   /**
    * Current added BackEnd instances. Empty by default. Use addBackEnd(..).
@@ -61,12 +63,6 @@ class Node(
   private val connectionConsolidator = new ConnectionConsolidator(this)
 
   /**
-   * Exposed variable accessible through the API functions below. A way to from the outside
-   * poll this Node for currently known Routes.
-   */
-  @volatile private var routesView: Array[Route] = Array[Route]()
-
-  /**
    * ****************************************
    *
    * 			API
@@ -75,17 +71,17 @@ class Node(
    */
 
   /**
-   * Gets the currently known routes.
+   * Gets a snapshot of the currently known routes.
    */
-  def getRoutes(): Seq[Route] = routes.synchronized {
-    routesView
+  def getRoutes(): java.util.List[Route] = {
+    new ArrayList(routes.values)
   }
 
   /**
-   * Gets the currently installed BackEnd objects.
+   * Gets a snapshot of the currently attached back-ends.
    */
-  def getBackEnds(): Seq[BackEnd] = {
-    new ArrayBuffer[BackEnd] ++ backEnds
+  def getBackEnds(): java.util.List[BackEnd] = {
+    new ArrayList(backEnds)
   }
 
   /**
@@ -203,7 +199,7 @@ class Node(
   def createAnnouncement(): NodeAnnouncement = {
     new NodeAnnouncement()
       .setName(name)
-      .setTags(tags)
+      .setTags(new java.util.ArrayList(tags))
       .setSenderId(id)
   }
 
@@ -227,7 +223,6 @@ class Node(
 
     if (!routes.contains(route.endpointId)) {
       routes.put(route.endpointId, route)
-      routesView = routes.values.toArray
       handleConnect(route)
     }
 
@@ -242,7 +237,7 @@ class Node(
   def onDisconnect(route: Route, reason: String) {
     neighbors.remove(route.endpointId)
     routes.get(route.endpointId) match {
-      case Some(r: Route) if (r == route) =>
+      case r: Route if (r == route) =>
         routes.remove(route.endpointId)
         handleDisconnect(route, reason)
       case _ =>
@@ -269,7 +264,7 @@ class Node(
         handleMessage(message, route)
       } else {
         routes.get(message.getTargetId) match {
-          case Some(route) => route.send(message)
+          case route: Route => route.send(message)
           case _ =>
         }
       }
@@ -287,7 +282,7 @@ class Node(
   protected def sendImpl(msg: Message): Node = {
     if (msg.getHops < msg.getMaxHops && msg.hasTargetId) {
       routes.get(msg.getTargetId) match {
-        case Some(route) => route.send(msg)
+        case route: Route => route.send(msg)
         case _ =>
       }
     }
