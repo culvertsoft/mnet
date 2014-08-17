@@ -17,18 +17,6 @@ import se.culvertsoft.mnet.api.util.NewNodeUUID
 /**
  * Represents a local MNet node that can be connected to
  * an MNet network using one or more BackEnd objects.
- *
- * @param name
- * 		The name this node will use to announce its presence on the network. This is
- *   	not required to be unique. Node's also create internal UUIDs for a unique ID
- *    	on the network.
- *
- * @param tags
- * 		The set of tags this node will use to announce its presence on the network
- *
- * @param announceInterval
- * 		The time interval at which to send announcements on the network about this
- *   	Node's presence. Announcements are also send when initally connecting.
  */
 class Node(settings: NodeSettings = new NodeSettings) {
 
