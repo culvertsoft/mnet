@@ -1,17 +1,9 @@
 package se.culvertsoft.mnet.backend.util
 
-import java.net.Socket
 import java.net.URI
 import java.nio.ByteBuffer
-import java.nio.channels.ByteChannel
-import java.nio.channels.SelectionKey
-import java.nio.channels.SocketChannel
 
-import org.java_websocket.WebSocket
-import org.java_websocket.WebSocketAdapter
-import org.java_websocket.client.DefaultWebSocketClientFactory
 import org.java_websocket.client.WebSocketClient
-import org.java_websocket.drafts.Draft
 import org.java_websocket.drafts.Draft_10
 import org.java_websocket.handshake.ServerHandshake
 
@@ -123,6 +115,10 @@ class ReconnectingWebsocket(
     println(s"$this got had error $error while $m_status to/from $serverUri")
   }
 
+  def hasBufferedData(): Boolean = {
+    isConnected && m_currentWebsocket.getConnection().hasBufferedData()
+  }
+
   /**
    * *********************************
    *
@@ -164,24 +160,7 @@ class ReconnectingWebsocket(
     m_status = Connecting
     m_currentWebsocket = new WebSocketClient(serverUri, new Draft_10, null, timeout) {
 
-      setWebSocketFactory(new DefaultWebSocketClientFactory(this) {
-
-        override def createWebSocket(a: WebSocketAdapter, d: Draft, s: Socket): WebSocket = {
-          ConfigureSocket(s, useTcpNoDelay)
-          super.createWebSocket(a, d, s)
-        }
-
-        override def createWebSocket(a: WebSocketAdapter, d: java.util.List[Draft], s: Socket): WebSocket = {
-          ConfigureSocket(s, useTcpNoDelay)
-          super.createWebSocket(a, d, s)
-        }
-
-        override def wrapChannel(channel: SocketChannel, c: SelectionKey, host: String, port: Int): ByteChannel = {
-          if (channel != null)
-            ConfigureSocket(channel.socket, useTcpNoDelay)
-          super.wrapChannel(channel, c, host, port)
-        }
-      })
+      setWebSocketFactory(JavaWebSockFactories.getClientFactory(this, useTcpNoDelay))
 
       override def onOpen(handshakedata: ServerHandshake) {
         m_status = Connected
