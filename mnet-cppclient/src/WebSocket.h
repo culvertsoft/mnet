@@ -9,7 +9,7 @@ namespace mnet {
 	/**
 	* Stops this client.
 	*/
-	class WebsocketClient : public QObject
+	class WebSocket : public QObject
 	{
 		Q_OBJECT
 
@@ -27,23 +27,27 @@ namespace mnet {
 		* Opens the underlying websocket.
 		*/
 		template <typename ReceiverType>
-		WebsocketClient(const QString& url, ReceiverType * receiver) : m_url(url) {
-			connect(&m_webSocket, &QWebSocket::connected, receiver, &ReceiverType::onConnect);
-			connect(&m_webSocket, &QWebSocket::disconnected, receiver, &ReceiverType::onDisconnect);
-			connect(&m_webSocket, &QWebSocket::textMessageReceived, receiver, &ReceiverType::onTextMessage);
-			connect(&m_webSocket, &QWebSocket::binaryMessageReceived, receiver, &ReceiverType::onBinaryMessage);
-			connect(this, &WebsocketClient::sendTextMessage_signal, this, &WebsocketClient::sendTextMessage_slot);
-			connect(this, &WebsocketClient::sendBinaryMessage_signal, this, &WebsocketClient::sendBinaryMessage_slot);
+		WebSocket(
+				const QString& url,
+				ReceiverType * receiver,
+				Qt::ConnectionType connectionType) : m_url(url) {
+			connect(&m_webSocket, &QWebSocket::connected, receiver, &ReceiverType::onConnect, connectionType);
+			connect(&m_webSocket, &QWebSocket::disconnected, receiver, &ReceiverType::onDisconnect, connectionType);
+			connect(&m_webSocket, &QWebSocket::textMessageReceived, receiver, &ReceiverType::onTextMessage, connectionType);
+			connect(&m_webSocket, &QWebSocket::binaryMessageReceived, receiver, &ReceiverType::onBinaryMessage, connectionType);
+			connect(this, &WebSocket::sendTextMessage_signal, this, &WebSocket::sendTextMessage_slot);
+			connect(this, &WebSocket::sendBinaryMessage_signal, this, &WebSocket::sendBinaryMessage_slot);
 			m_webSocket.open(m_url);
 		}
 
 		/**
 		 * Closes the underlying socket, which was opened in the constructor.
 		 */
-		virtual ~WebsocketClient() {
+		virtual ~WebSocket() {
 			m_webSocket.close();
 		}
 
+	public Q_SLOTS:
 		/**
 		 * Emits the signal 'sendTextMessage_signal', which will be
 		 * processed in the 'sendTextMessage_slot'. This is to ensure that we
@@ -73,6 +77,7 @@ namespace mnet {
 	private:
 		QWebSocket m_webSocket;
 		QUrl m_url;
+
 	};
 
 }

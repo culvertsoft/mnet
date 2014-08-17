@@ -1,5 +1,5 @@
 #include <QtCore/QCoreApplication>
-#include "WebSocketThread.h"
+#include "ReconnectingWebSocket.h"
 #include <Windows.h>
 
 static void noop_deleter(QCoreApplication * app) {}
@@ -18,10 +18,13 @@ int main(int argc, char *argv[]) {
 
 	QEventLoop eventLoop;
 
-	mnet::WebSockThread client("ws://localhost:80");
+	mnet::ReconnectingWebSocket client("ws://localhost:80", Qt::DirectConnection);
 	client.start();
 
-	eventLoop.exec();
+	Sleep(1000);
+	client.stop();
+
+	client.wait();
 
 	return 0;
 

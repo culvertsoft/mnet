@@ -9,7 +9,7 @@ find_package(Qt5WebSockets)
 
 add_executable( ${PROJECT_NAME} 
                 main.cpp    
-                WebSocketThread.h
-                WebSocketClient.h )
+                WebSocket.h
+                ReconnectingWebSocket.h )
                 
 target_link_libraries(${PROJECT_NAME} Qt5::WebSockets)
