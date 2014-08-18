@@ -145,7 +145,7 @@ class Node(settings: NodeSettings = new NodeSettings) {
    * Gets a route to the specified endpoint ID, or null if no route is known.
    */
   def getRoute(id: NodeUUID): Route = {
-    routes.getOrElse(id, null)
+    if (id != null) routes.get(id) else null
   }
 
   /**
