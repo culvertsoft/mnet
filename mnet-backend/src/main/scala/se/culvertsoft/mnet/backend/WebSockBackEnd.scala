@@ -49,7 +49,7 @@ class WebSockBackEnd(settings: WebsockBackendSettings) extends BackEnd {
    *
    * Starts any internal helper threads.
    *
-   * @throw MNetException
+   * @throws MNetException
    * 	If this back-end is already started
    */
   override def start(handler_in: ConnectionConsolidator) {

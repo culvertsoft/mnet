@@ -1,15 +1,16 @@
 package se.culvertsoft.mnet.client
 
 import scala.collection.JavaConversions.seqAsJavaList
+
 import se.culvertsoft.mnet.DataMessage
 import se.culvertsoft.mnet.Message
 import se.culvertsoft.mnet.NodeAnnouncement
 import se.culvertsoft.mnet.NodeSettings
+import se.culvertsoft.mnet.NodeUUID
 import se.culvertsoft.mnet.api.Connection
 import se.culvertsoft.mnet.api.Route
 import se.culvertsoft.mnet.backend.WebSockBackEnd
 import se.culvertsoft.mnet.backend.WebsockBackendSettings
-import se.culvertsoft.mnet.api.Route
 
 /**
  * The default constructor will simply set up a local host node.
@@ -78,22 +79,37 @@ class MNetClient(
     this
   }
 
-  def send(msgContents: String): MNetClient = {
-    node.send(
-      new DataMessage()
-        .setSenderId(node.id)
-        .setStringData(msgContents))
+  def send(message: Message): MNetClient = {
+    node.send(message)
     this
   }
 
-  def send(msgContents: Array[Byte]): MNetClient = {
-    node.send(
-      new DataMessage()
-        .setSenderId(node.id)
-        .setBinaryData(msgContents))
-    this
+  def send(msgContents: String, targetId: NodeUUID): MNetClient = {
+    send(new DataMessage()
+      .setSenderId(node.id)
+      .setTargetId(targetId)
+      .setStringData(msgContents))
   }
-  
+
+  def send(msgContents: Array[Byte], targetId: NodeUUID): MNetClient = {
+    send(new DataMessage()
+      .setSenderId(node.id)
+      .setTargetId(targetId)
+      .setBinaryData(msgContents))
+  }
+
+  def broadcast(message: Message): MNetClient = {
+    send(message.setTargetId(null))
+  }
+
+  def broadcast(msgContents: String): MNetClient = {
+    send(msgContents, null)
+  }
+
+  def broadcast(msgContents: Array[Byte]): MNetClient = {
+    send(msgContents, null)
+  }
+
   def getRoutes(): java.util.List[Route] = {
     node.getRoutes
   }

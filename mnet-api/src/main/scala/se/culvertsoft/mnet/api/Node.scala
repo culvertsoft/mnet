@@ -121,7 +121,7 @@ class Node(settings: NodeSettings = new NodeSettings) {
   /**
    * Gets a currently attached BackEnd object by type.
    *
-   * @throw MNetException
+   * @throws MNetException
    * 		If no such BackEnd is currently attached
    */
   def getBackEnd[T <: BackEnd: ClassTag](): T = {
