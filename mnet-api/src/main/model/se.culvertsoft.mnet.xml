@@ -57,6 +57,11 @@
             <metaData type="string"/>
         </DataMessage>
         
+        <NodeDisconnect extends="Message">
+            <disconnectedNodeId type="NodeUUID"/>
+            <reason type="String"/>
+        </NodeDisconnect>
+
         <ErrorMessage extends="Message">
             <msg type="String"/>
             <exceptionType type="String"/>

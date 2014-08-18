@@ -34,11 +34,11 @@ class WebsockOutHandler(
   }
 
   override def onTextMessage(msg: String) {
-    handler.onMessage(this, serializer.deserializeJson(msg))
+    handler.onMessage(serializer.deserializeJson(msg), this)
   }
 
   override def onBinaryMessage(msg: ByteBuffer) {
-    handler.onMessage(this, serializer.deserializeBinary(msg.array))
+    handler.onMessage(serializer.deserializeBinary(msg.array), this)
   }
 
   override def onError(error: Exception) {

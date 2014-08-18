@@ -4,12 +4,16 @@ import java.util.ArrayList
 import java.util.concurrent.ConcurrentHashMap
 
 import scala.collection.JavaConversions.bufferAsJavaList
+import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.JavaConversions.mapAsScalaConcurrentMap
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
 
+import se.culvertsoft.mnet.IdCreateReply
+import se.culvertsoft.mnet.IdCreateRequest
 import se.culvertsoft.mnet.Message
 import se.culvertsoft.mnet.NodeAnnouncement
+import se.culvertsoft.mnet.NodeDisconnect
 import se.culvertsoft.mnet.NodeSettings
 import se.culvertsoft.mnet.NodeUUID
 import se.culvertsoft.mnet.api.util.NewNodeUUID
@@ -28,7 +32,7 @@ class Node(settings: NodeSettings = new NodeSettings) {
   /**
    * Currently detected neighbor nodes on the network.
    */
-  private val neighbors = new ConcurrentHashMap[NodeUUID, Route]
+  private val neighbors = new ConcurrentHashMap[Connection, Route]
 
   /**
    * Routing table from node IDs to endpoints.
@@ -101,7 +105,7 @@ class Node(settings: NodeSettings = new NodeSettings) {
    * Broadcasts a message to all neighbor nodes (and onwards) that meet the given filter.
    * The default filter sends to all neighbors.
    */
-  def broadcast(msg: Message, filter: Route => Boolean = _ => true): Node = {
+  def broadcast(msg: Message, filter: Connection => Boolean = _ => true): Node = {
     broadcastImpl(msg, filter)
     this
   }
@@ -162,14 +166,14 @@ class Node(settings: NodeSettings = new NodeSettings) {
   /**
    * Called by any thread when an exception is thrown
    */
-  def handleError(error: Exception, endPoint: AnyRef) {
+  def handleError(error: Exception, source: Object) {
     error.printStackTrace()
   }
 
   /**
    * Called by the ConnectionConsolidator when a new message is received.
    */
-  def handleMessage(message: Message, route: Option[Route]) {
+  def handleMessage(message: Message, connection: Connection) {
 
   }
 
@@ -195,35 +199,56 @@ class Node(settings: NodeSettings = new NodeSettings) {
    * ***************************************
    */
 
+  def onConnect(connection: Connection) {
+    connection.send(createAnnouncement())
+  }
+
   /**
    * Default handling of a new NodeAnnouncement. Can be overloaded, but is usually not the case.
    * Only to be called by the ConnectionConsolidator.
    */
-  def onAnnounce(msg: NodeAnnouncement, route: Route) {
+  def onAnnounce(msg: NodeAnnouncement, connection: Connection) {
 
-    if (msg.getHops == 1) {
-      neighbors.put(route.endpointId, route)
-    }
+    if (!msg.hasSenderId)
+      throw new MNetException(s"${msg._typeName} from $connection missing senderId", connection)
 
-    if (!routes.contains(route.endpointId)) {
-      routes.put(route.endpointId, route)
+    if (!routes.containsKey(msg.getSenderId)) {
+      val route = new Route(msg.getSenderId, connection, msg)
+      routes.put(msg.getSenderId, route)
+      if (msg.getHops == 1 && !neighbors.containsKey(connection))
+        neighbors.put(connection, route)
       handleConnect(route)
     }
 
-    broadcast(msg, _ != route)
+    broadcast(msg, _ != connection)
 
   }
 
   /**
-   * Default handling of a disconnected route. Can be overloaded, but is usually not the case.
+   * Default handling of a NodeDisconnect. Can be overloaded, but is usually not the case.
    * Only to be called by the ConnectionConsolidator.
    */
-  def onDisconnect(route: Route, reason: String) {
-    neighbors.remove(route.endpointId)
-    routes.get(route.endpointId) match {
-      case r: Route if (r == route) =>
-        routes.remove(route.endpointId)
-        handleDisconnect(route, reason)
+  def onRouteDisconnect(route: Route, reason: String, connection: Connection) {
+    if (route != null) {
+      routes.remove(route.endpointId)
+      neighbors.remove(route.endpointId)
+      broadcast(new NodeDisconnect().setReason(reason).setDisconnectedNodeId(route.endpointId), _ != connection)
+      handleDisconnect(route, reason)
+    }
+  }
+
+  /**
+   * Default handling of a disconnected neighbor. Can be overloaded, but is usually not the case.
+   * Only to be called by the ConnectionConsolidator.
+   */
+  def onNeighborDisconnect(reason: String, connection: Connection) {
+    neighbors.remove(connection) match {
+      case neighborRoute: Route =>
+        // We remove the neighbor first so that the children's 
+        // broadcasts are not sent back
+        onRouteDisconnect(neighborRoute, reason, connection)
+        for (route <- routes.values.filter(_.connection == connection))
+          onRouteDisconnect(route, reason, connection)
       case _ =>
     }
   }
@@ -232,30 +257,41 @@ class Node(settings: NodeSettings = new NodeSettings) {
    * Default handling of a errors. Can be overloaded, but is usually not the case.
    * Only to be called by internal threads.
    */
-  def onError(error: Exception, endPoint: AnyRef) {
-    handleError(error, endPoint)
+  def onError(error: Exception, source: Object) {
+    handleError(error, source)
   }
 
   /**
    * Default handling of a new message. Can be overloaded, but is usually not the case.
    * Only to be called by the ConnectionConsolidator.
    */
-  def onMessage(message: Message, route: Option[Route]) {
+  def onMessage(msg: Message, connection: Connection) {
 
-    // Targeted
-    if (message.hasTargetId) {
-      if (message.getTargetId == id) {
-        handleMessage(message, route)
-      } else {
-        routes.get(message.getTargetId) match {
-          case route: Route => route.send(message)
-          case _ =>
+    incHops(msg)
+
+    msg match {
+      case msg: NodeAnnouncement =>
+        onAnnounce(msg, connection)
+      case msg: IdCreateRequest =>
+        connection.send(new IdCreateReply().setCreatedId(NewNodeUUID()))
+      case msg: NodeDisconnect =>
+        onRouteDisconnect(routes.get(msg.getDisconnectedNodeId), msg.getReason, connection)
+      case msg =>
+        // Targeted
+        if (msg.hasTargetId) {
+          if (msg.getTargetId == id) {
+            handleMessage(msg, connection)
+          } else {
+            routes.get(msg.getTargetId) match {
+              case route: Route => route.send(msg)
+              case _ =>
+            }
+          }
+        } // Broadcast
+        else {
+          handleMessage(msg, connection)
+          broadcast(msg, _ != connection)
         }
-      }
-    } // Broadcast
-    else {
-      handleMessage(message, route)
-      broadcast(message, _ != route.getOrElse(null))
     }
 
   }
@@ -278,15 +314,25 @@ class Node(settings: NodeSettings = new NodeSettings) {
    */
   protected def broadcastImpl(
     msg: Message,
-    filter: Route => Boolean = _ => true): Node = {
+    filter: Connection => Boolean = _ => true): Node = {
     if (msg.getHops < msg.getMaxHops) {
-      for ((_, route) <- neighbors) {
-        if (filter(route) && route.endpointId != msg.getSenderId) {
-          route.send(msg)
+      for ((connection, route) <- neighbors) {
+        if (filter(connection) && route.endpointId != msg.getSenderId) {
+          connection.send(msg)
         }
       }
     }
     this
+  }
+
+  private final def incHops(msg: Message) {
+    if (!msg.hasHops())
+      msg.setHops(0)
+    if (!msg.hasMaxHops())
+      msg.setMaxHops(settings.getMaxHopsDefault.toByte)
+    if (msg.getMaxHops > settings.getMaxHopsLimit)
+      msg.setMaxHops(settings.getMaxHopsLimit.toByte)
+    msg.setHops((msg.getHops + 1).toByte)
   }
 
 }

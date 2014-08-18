@@ -5,6 +5,7 @@ import se.culvertsoft.mnet.api.Route
 import se.culvertsoft.mnet.backend.WebSockBackEnd
 import se.culvertsoft.mnet.backend.WebsockBackendSettings
 import se.culvertsoft.mnet.backend.WebsockSerializer
+import se.culvertsoft.mnet.api.Connection
 
 object TestUtils {
 
@@ -17,7 +18,7 @@ object TestUtils {
   def newNode(port: Int)(msgHandler: Message => Unit = _ => Unit): Node = {
     val settings = getTestCfg(port)
     new Node() {
-      override def handleMessage(message: Message, route: Option[Route]) {
+      override def handleMessage(message: Message, from: Connection) {
         msgHandler(message)
       }
     }.addBackEnd(new WebSockBackEnd(settings))

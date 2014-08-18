@@ -1,12 +1,14 @@
 package se.culvertsoft.mnet
 
+import java.util.concurrent.ConcurrentLinkedQueue
+
 import scala.collection.JavaConversions.asScalaBuffer
-import scala.collection.mutable.ArrayBuffer
+
 import org.junit.Test
+
 import TestUtils.assertFor01sec
 import TestUtils.assertWithin1sec
 import se.culvertsoft.mnet.backend.WebSockBackEnd
-import java.util.concurrent.ConcurrentLinkedQueue
 
 class CanSendMessage {
 
@@ -33,7 +35,7 @@ class CanSendMessage {
 
     b1.broadcast(errMsgSentByB1)
     b2.broadcast(errMsgSentByB2)
-        
+
     assertWithin1sec(b1Msgs.size == 1 && b2Msgs.size == 1)
 
     b2.stop()

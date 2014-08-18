@@ -37,11 +37,11 @@ class WebsockInHandler(
   }
 
   override def onMessage(conn: WebSocket, jsonMsg: String) {
-    handler.onMessage(RichWebSock(conn), serializer.deserializeJson(jsonMsg))
+    handler.onMessage(serializer.deserializeJson(jsonMsg), RichWebSock(conn))
   }
 
   override def onMessage(conn: WebSocket, binaryMsg: ByteBuffer) {
-    handler.onMessage(RichWebSock(conn), serializer.deserializeBinary(binaryMsg.array))
+    handler.onMessage(serializer.deserializeBinary(binaryMsg.array), RichWebSock(conn))
   }
 
   override def onError(conn: WebSocket, ex: Exception) {

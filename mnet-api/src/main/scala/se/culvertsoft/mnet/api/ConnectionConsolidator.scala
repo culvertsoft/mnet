@@ -1,16 +1,9 @@
 package se.culvertsoft.mnet.api
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
 import scala.util.Random
 
-import se.culvertsoft.mnet.IdCreateReply
-import se.culvertsoft.mnet.IdCreateRequest
 import se.culvertsoft.mnet.Message
-import se.culvertsoft.mnet.NodeAnnouncement
 import se.culvertsoft.mnet.NodeSettings
-import se.culvertsoft.mnet.NodeUUID
-import se.culvertsoft.mnet.api.util.NewNodeUUID
 import se.culvertsoft.mnet.api.util.ThreadConsolidator
 
 /**
@@ -21,16 +14,6 @@ class ConnectionConsolidator(
   node_dont_use_here: Node,
   settings: NodeSettings,
   iterationTime: Int = 10) extends ThreadConsolidator[Node](node_dont_use_here, iterationTime) {
-
-  /**
-   * Look-up table from connections -> endpoint NodeUUIDs
-   */
-  private val conn2Id = new HashMap[Connection, ArrayBuffer[NodeUUID]]
-
-  /**
-   * Lookup-table of NodeUUIDs -> Routes currently active. Mirrors Node.routes.
-   */
-  private val routes = new HashMap[NodeUUID, Route]
 
   /**
    * Helper time stamp to know when we last sent out a NodeAnnouncement
@@ -55,47 +38,8 @@ class ConnectionConsolidator(
    * command que of this ConnectionConsolidator. Notifies the event handling thread
    * that a new command is available.
    */
-  def onMessage(conn: Connection, msg: Message) {
-
-    handleMaxHops(msg)
-
-    queCommand { node =>
-
-      msg match {
-
-        case msg: NodeAnnouncement =>
-
-          if (!msg.hasSenderId)
-            throw new MNetException(s"${msg._typeName} from $conn missing senderId", conn)
-
-          routes.get(msg.getSenderId) match {
-            case x @ Some(route) =>
-              node.onAnnounce(msg, route)
-            case None =>
-              val route = new Route(msg.getSenderId, conn, msg)
-              addEndpoint(msg, conn, route)
-              node.onAnnounce(msg, route)
-          }
-
-        case msg: IdCreateRequest =>
-          conn.send(new IdCreateReply().setCreatedId(NewNodeUUID()))
-
-        case msg =>
-
-          val fromRoute =
-            routes.get(msg.getSenderId) match {
-              case r @ Some(_) => r
-              case _ =>
-                conn2Id.get(conn) match {
-                  case Some(ids) if (ids.nonEmpty) => routes.get(ids.head)
-                  case _ => None
-                }
-            }
-
-          node.onMessage(msg, fromRoute)
-
-      }
-    }
+  def onMessage(msg: Message, conn: Connection) {
+    queCommand { _.onMessage(msg, conn) }
   }
 
   /**
@@ -103,19 +47,15 @@ class ConnectionConsolidator(
    * that a new command is available.
    */
   def onConnect(conn: Connection) {
-    queCommand { node =>
-      conn.send(node.createAnnouncement())
-    }
+    queCommand { _.onConnect(conn) }
   }
 
   /**
    * Called when notified of an error by any of the managed connections.
    * Notifies the event handling thread that a new command is available.
    */
-  def onError(error: Exception, item: Connection) {
-    queCommand { node =>
-      node.onError(error, item)
-    }
+  def onError(error: Exception, source: Connection) {
+    queCommand { _.onError(error, source) }
   }
 
   /**
@@ -123,33 +63,7 @@ class ConnectionConsolidator(
    * that a new command is available.
    */
   def onDisconnect(reason: String, conn: Connection) {
-
-    queCommand { node =>
-      val removedRoutes: Seq[Route] = {
-        conn2Id.remove(conn) match {
-          case Some(items) => items.map(routes.remove(_).get)
-          case None => Nil
-        }
-      }
-
-      removedRoutes.foreach(node.onDisconnect(_, reason))
-    }
-
-  }
-
-  private def addEndpoint(msg: NodeAnnouncement, conn: Connection, route: Route) {
-    conn2Id.getOrElseUpdate(conn, new ArrayBuffer) += (msg.getSenderId)
-    routes.put(msg.getSenderId, route)
-  }
-
-  private final def handleMaxHops(msg: Message) {
-    if (!msg.hasHops())
-      msg.setHops(0)
-    if (!msg.hasMaxHops())
-      msg.setMaxHops(settings.getMaxHopsDefault.toByte)
-    if (msg.getMaxHops > settings.getMaxHopsLimit)
-      msg.setMaxHops(settings.getMaxHopsLimit.toByte)
-    msg.setHops((msg.getHops + 1).toByte)
+    queCommand { _.onNeighborDisconnect(reason, conn) }
   }
 
   def time(): Double = {
