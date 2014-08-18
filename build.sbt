@@ -17,6 +17,6 @@ lazy val mnet_api = project in file("mnet-api")
 
 lazy val mnet_backend = (project in file("mnet-backend")).dependsOn(mnet_api)
 
-lazy val mnet_javaclient = (project in file("mnet-javaclient")).dependsOn(mnet_api)
+lazy val mnet_javaclient = (project in file("mnet-javaclient")).dependsOn(mnet_backend)
 
 // cppclient handled elsewhere

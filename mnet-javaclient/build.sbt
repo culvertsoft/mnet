@@ -9,7 +9,7 @@ isSnapshot := version.value.contains("SNAPSHOT")
 
 crossPaths := false
 
-libraryDependencies += "se.culvertsoft" % "mnet-api" % version.value
+libraryDependencies += "se.culvertsoft" % "mnet-backend" % version.value
 
 libraryDependencies += "com.novocode" % "junit-interface" % "0.10" % Test
 
