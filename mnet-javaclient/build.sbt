@@ -1,5 +1,5 @@
 
-name := "mnet-javaclient"
+name := "mnet-client"
 
 organization := "se.culvertsoft"
 
