@@ -19,7 +19,8 @@ namespace mnet {
 		* messages to an external qt event loop (that you must start).
 		*/
 		ReconnectingWebSocket(const QString& url, Qt::ConnectionType callbackPolicy) :
-				m_url(url) {
+				m_url(url),
+				m_callbackPolicy(callbackPolicy) {
 		}
 
 
