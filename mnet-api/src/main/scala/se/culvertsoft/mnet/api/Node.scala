@@ -140,6 +140,13 @@ class Node(settings: NodeSettings = new NodeSettings) {
   def announce() {
     broadcast(createAnnouncement())
   }
+  
+  /**
+   * Gets a route to the specified endpoint ID, or null if no route is known.
+   */
+  def getRoute(id: NodeUUID): Route = {
+    routes.getOrElse(id, null)
+  }
 
   /**
    * ****************************************
@@ -271,7 +278,7 @@ class Node(settings: NodeSettings = new NodeSettings) {
 
     // check expected route to get this msg
     if (msg.hasSenderId) {
-      val expectedRoute = routes.get(msg.getSenderId)
+      val expectedRoute = getRoute(msg.getSenderId)
       if (expectedRoute != null && expectedRoute.connection != connection)
         return
     }
@@ -282,21 +289,21 @@ class Node(settings: NodeSettings = new NodeSettings) {
       case msg: IdCreateRequest =>
         connection.send(new IdCreateReply().setCreatedId(NewNodeUUID()))
       case msg: NodeDisconnect =>
-        onRouteDisconnect(routes.get(msg.getDisconnectedNodeId), msg.getReason, connection)
+        onRouteDisconnect(getRoute(msg.getDisconnectedNodeId), msg.getReason, connection)
       case msg =>
         // Targeted
         if (msg.hasTargetId) {
           if (msg.getTargetId == id) {
-            handleMessage(msg, connection, routes.get(msg.getSenderId))
+            handleMessage(msg, connection, getRoute(msg.getSenderId))
           } else {
-            routes.get(msg.getTargetId) match {
+            getRoute(msg.getTargetId) match {
               case route: Route => route.send(msg)
               case _ =>
             }
           }
         } // Broadcast
         else {
-          handleMessage(msg, connection, routes.get(msg.getSenderId))
+          handleMessage(msg, connection, getRoute(msg.getSenderId))
           broadcast(msg, _ != connection)
         }
     }
@@ -308,7 +315,7 @@ class Node(settings: NodeSettings = new NodeSettings) {
    */
   protected def sendImpl(msg: Message): Node = {
     if (msg.getHops < msg.getMaxHops && msg.hasTargetId) {
-      routes.get(msg.getTargetId) match {
+      getRoute(msg.getTargetId) match {
         case route: Route => route.send(msg)
         case _ =>
       }
