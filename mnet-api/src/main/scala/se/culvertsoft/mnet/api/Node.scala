@@ -261,7 +261,7 @@ class Node(settings: NodeSettings = new NodeSettings) {
   }
 
   /**
-   * Default handling of a errors. Can be overloaded, but is usually not the case.
+   * Default handling of errors. Can be overloaded, but is usually not the case.
    * Only to be called by internal threads.
    */
   def onError(error: Exception, source: Object) {
