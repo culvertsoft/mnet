@@ -20,6 +20,7 @@ namespace mnet {
 		*/
 		ReconnectingWebSocket(const QString& url, Qt::ConnectionType callbackPolicy) :
 				m_url(url),
+				m_toLive(true),
 				m_callbackPolicy(callbackPolicy) {
 		}
 
