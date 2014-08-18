@@ -135,7 +135,7 @@ class MNetClient(
     error.printStackTrace()
   }
 
-  protected[client] def handleMessage(message: Message, connection: Connection) {
+  protected[client] def handleMessage(message: Message, connection: Connection, route: Route) {
     println(s"$this got ${message._typeName} from $connection")
   }
 

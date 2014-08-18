@@ -23,8 +23,8 @@ class MNetClientNode(
     client.handleError(error, source)
   }
 
-  override def handleMessage(message: Message, connection: Connection) {
-    client.handleMessage(message, connection)
+  override def handleMessage(message: Message, connection: Connection, route: Route) {
+    client.handleMessage(message, connection, route)
   }
 
   override def createAnnouncement(): NodeAnnouncement = {

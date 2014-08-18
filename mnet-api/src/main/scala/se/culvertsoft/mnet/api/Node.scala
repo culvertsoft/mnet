@@ -173,7 +173,7 @@ class Node(settings: NodeSettings = new NodeSettings) {
   /**
    * Called by the ConnectionConsolidator when a new message is received.
    */
-  def handleMessage(message: Message, connection: Connection) {
+  def handleMessage(message: Message, connection: Connection, route: Route) {
 
   }
 
@@ -268,7 +268,7 @@ class Node(settings: NodeSettings = new NodeSettings) {
   def onMessage(msg: Message, connection: Connection) {
 
     incHops(msg)
-    
+
     // check expected route to get this msg
     if (msg.hasSenderId) {
       val expectedRoute = routes.get(msg.getSenderId)
@@ -287,7 +287,7 @@ class Node(settings: NodeSettings = new NodeSettings) {
         // Targeted
         if (msg.hasTargetId) {
           if (msg.getTargetId == id) {
-            handleMessage(msg, connection)
+            handleMessage(msg, connection, routes.get(msg.getSenderId))
           } else {
             routes.get(msg.getTargetId) match {
               case route: Route => route.send(msg)
@@ -296,7 +296,7 @@ class Node(settings: NodeSettings = new NodeSettings) {
           }
         } // Broadcast
         else {
-          handleMessage(msg, connection)
+          handleMessage(msg, connection, routes.get(msg.getSenderId))
           broadcast(msg, _ != connection)
         }
     }
