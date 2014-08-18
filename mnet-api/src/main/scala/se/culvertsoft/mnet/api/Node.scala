@@ -229,7 +229,7 @@ class Node(settings: NodeSettings = new NodeSettings) {
    * Only to be called by the ConnectionConsolidator.
    */
   def onRouteDisconnect(route: Route, reason: String, connection: Connection) {
-    if (route != null) {
+    if (route != null && route.connection == connection) {
       routes.remove(route.endpointId)
       neighbors.remove(route.endpointId)
       broadcast(new NodeDisconnect().setReason(reason).setDisconnectedNodeId(route.endpointId), _ != connection)
