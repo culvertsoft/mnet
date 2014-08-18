@@ -268,6 +268,13 @@ class Node(settings: NodeSettings = new NodeSettings) {
   def onMessage(msg: Message, connection: Connection) {
 
     incHops(msg)
+    
+    // check expected route to get this msg
+    if (msg.hasSenderId) {
+      val expectedRoute = routes.get(msg.getSenderId)
+      if (expectedRoute != null && expectedRoute.connection != connection)
+        return
+    }
 
     msg match {
       case msg: NodeAnnouncement =>
