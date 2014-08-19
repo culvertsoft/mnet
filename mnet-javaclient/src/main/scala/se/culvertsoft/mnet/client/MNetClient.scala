@@ -68,6 +68,10 @@ class MNetClient(
    *
    * *******************************************
    */
+  
+  def id(): NodeUUID = {
+    node.id
+  }
 
   def start(): MNetClient = {
     node.start()
@@ -80,6 +84,8 @@ class MNetClient(
   }
 
   def send(message: Message): MNetClient = {
+    if (!message.hasSenderId)
+      message.setSenderId(id)
     node.send(message)
     this
   }
