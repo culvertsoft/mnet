@@ -49,4 +49,18 @@ case class Route(
     connection.hasBufferedData
   }
 
+  /**
+   * Returns the name received in the NodeAnnouncement
+   */
+  def name(): String = {
+    announcement.getName()
+  }
+
+  /**
+   * Returns the tags received in the NodeAnnouncement
+   */
+  def tags(): java.util.List[String] = {
+    announcement.getTags()
+  }
+
 }
