@@ -68,7 +68,7 @@ class MNetClient(
    *
    * *******************************************
    */
-  
+
   def id(): NodeUUID = {
     node.id
   }
@@ -173,5 +173,25 @@ object MNetClient {
     out.setTags(new java.util.ArrayList(tags))
     out
   }
+
+  /**
+   * ********************************************
+   *
+   *
+   * 		IF USED AS APPLICATION
+   *
+   * *******************************************
+   */
+
+  def main(args: Array[String]) {
+    val port =
+      if (args.nonEmpty) {
+        args(0).toInt
+      } else {
+        80
+      }
+    new MNetClient(new WebsockBackendSettings().setListenPort(port)).start()
+  }
+
 }
 

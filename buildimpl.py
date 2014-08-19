@@ -24,6 +24,12 @@ def eclipse():
 def publish():
     print("publish() not yet implemented!")
     
+def deploy(folder):
+    mkFolder(folder)
+    for jarFile in findFiles(".", '*assembly*.jar*'):
+        trgFilePath = folder + "/" + os.path.basename(jarFile)
+        shutil.copyfile(jarFile, trgFilePath)
+
 ###########
 # HELPERS #
 ###########
@@ -43,7 +49,7 @@ def generate_models():
 def build_java_and_scala():
     sbt(".",   ('"project mnet_api" publish-local '
                 '"project mnet_backend" publish-local '
-                '"project mnet_javaclient" publish-local '))
+                '"project mnet_javaclient" assembly publish-local '))
 
 def build_cpp():
     print("build_cpp() not yet implemented!")

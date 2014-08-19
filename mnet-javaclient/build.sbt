@@ -1,3 +1,4 @@
+import AssemblyKeys._ // put this at the top of the file
 
 name := "mnet-client"
 
@@ -16,3 +17,5 @@ libraryDependencies += "com.novocode" % "junit-interface" % "0.10" % Test
 EclipseKeys.withSource := true
 
 EclipseKeys.relativizeLibs := false
+
+test in assembly := {}
