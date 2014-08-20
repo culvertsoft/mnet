@@ -24,6 +24,7 @@ namespace mnet {
 		typedef se::culvertsoft::mnet::NodeDisconnect NodeDisconnect;
 		typedef se::culvertsoft::mnet::IdCreateRequest IdCreateRequest;
 		typedef se::culvertsoft::mnet::ClassRegistry ClassRegistry;
+		typedef se::culvertsoft::mnet::IdCreateReply IdCreateReply;
 
 		Q_OBJECT
 		
@@ -104,8 +105,6 @@ namespace mnet {
 
 		virtual void handleMessage(std::shared_ptr<Message> uknMsg) {
 			
-			using namespace se::culvertsoft::mnet;
-
 			if (uknMsg) {
 
 				if (hasId() && uknMsg->getSenderId() == id())
