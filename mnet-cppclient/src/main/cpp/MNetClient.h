@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <QElapsedTimer>
 #include <se/culvertsoft/mnet/ClassRegistry.h>
 #include "ReconnectingWebSocket.h"
 #include "MNetSerializer.h"
@@ -14,15 +15,24 @@ namespace mnet {
 		typedef se::culvertsoft::mnet::NodeUUID NodeUUID;
 		typedef se::culvertsoft::mnet::Message Message;
 		typedef se::culvertsoft::mnet::DataMessage DataMessage;
+		typedef se::culvertsoft::mnet::NodeAnnouncement NodeAnnouncement;
+		typedef se::culvertsoft::mnet::NodeDisconnect NodeDisconnect;
 
 		Q_OBJECT
 
 	public:
 
-		MNetClient(const QString& url) : 
-			ReconnectingWebSocket(url),
-			m_connected(false) {
+		MNetClient(
+			const QString& url,
+			const std::string& name = "unnamed_cpp_node",
+			const std::vector<std::string>& tags = std::vector<std::string>()) : 
+				ReconnectingWebSocket(url),
+				m_connected(false),
+				m_name(name),
+				m_tags(tags) {
+
 			connect(this, &MNetClient::send_signal, this, &MNetClient::send_slot);
+			m_announceTimer.start();
 		}
 
 		bool isConnected() const {
@@ -45,28 +55,41 @@ namespace mnet {
 			Q_EMIT send_signal(message);
 		}
 
-		/**
-		 * Note that route may be NULL, if the sender is unknown
-		 */
-		virtual void handleMessage(std::shared_ptr<Message> msg, Route * route) {
-
-		}
-
 		bool isRunning() const {
 			return super::isRunning();
 		}
 
-		const NodeUUID& id() const {
+		NodeUUID id() const {
 			return m_myId;
 		}
 
+	protected:
+
+		virtual void step() override {
+			super::step();
+			if (hasCheckinInfo() && m_announceTimer.elapsed() > 1000) {
+				m_announceTimer.restart();
+				checkin();
+			}
+		}
+
+		// Note that route may be NULL, if the sender is unknown
+		virtual void handleMessage(std::shared_ptr<Message> msg, Route * route) {
+		}
+
 		virtual void handleConnect() {
-			qDebug() << "WebSocket: connected";
-			send(se::culvertsoft::mnet::IdCreateRequest());
+			qDebug() << "MNetClient: handleConnect";
 		}
 
 		virtual void handleDisconnect() {
-			qDebug() << "WebSocket: disconnected";
+			qDebug() << "MNetClient: handleDisconnect";
+		}
+
+		virtual void handleNodeDisconnect(const NodeDisconnect& msg) {
+		}
+
+		virtual void handleAnnounce(const NodeAnnouncement& announcement) {
+			qDebug() << "MNetClient: announcement: " << QString::fromStdString(id2string(announcement.getSenderId()));
 		}
 
 	Q_SIGNALS:
@@ -75,19 +98,67 @@ namespace mnet {
 
 	protected:
 
+		virtual bool hasCheckinInfo() const {
+			return id().hasLsb() && id().hasMsb();
+		}
+
+		virtual void checkin() {
+			if (isConnected() && hasCheckinInfo()) {
+				send(NodeAnnouncement()
+					.setSenderId(id())
+					.setName(m_name)
+					.setTags(m_tags));
+			}
+		}
+
+		virtual void requestNetworkId() {
+			if (isConnected()) {
+				send(se::culvertsoft::mnet::IdCreateRequest());
+			}
+		}
+
 		virtual void handleMessage(std::shared_ptr<Message> msg) {
 			using namespace se::culvertsoft::mnet;
 			if (msg) {
 
+				if (hasCheckinInfo() && msg->getSenderId() == id())
+					return;
+
 				Route * route = getRoute(msg->getSenderId());
 
-				switch (msg->_typeId()) {
-				case IdCreateReply::_type_id:
+				if (is_base<IdCreateReply>(*msg)) {
 					m_myId = static_cast<IdCreateReply&>(*msg).getCreatedId();
-					break;
-				default:
+					checkin();
+				}
+				else if (is_base<NodeAnnouncement>(*msg)) {
+
+					NodeAnnouncement& announcement = static_cast<NodeAnnouncement&>(*msg);
+
+					if (!announcement.hasSenderId()) {
+						qDebug() << "MNetClient: handleAnnounce: no senderId supplied";
+						return;
+					}
+
+					m_routes[id2string(announcement.getSenderId())] = Route(announcement);
+
+					handleAnnounce(announcement);
+				}
+				else if (is_base<NodeDisconnect>(*msg)) {
+
+					NodeDisconnect& discMsg = static_cast<NodeDisconnect&>(*msg);
+					if (!discMsg.hasDisconnectedNodeId()) {
+						qDebug() << "MNetClient: handleNodeDisconnect: no disconnectdId supplied";
+						return;
+					}
+
+					m_routes.erase(id2string(discMsg.getDisconnectedNodeId()));
+
+					handleNodeDisconnect(discMsg);
+				}
+				else {
 					handleMessage(msg, route);
 				}
+
 			}
 		}
 
@@ -108,10 +179,13 @@ namespace mnet {
 
 	protected Q_SLOTS:
 
-		virtual void send_slot(const Message msg)  {
+		virtual void send_slot(Message msg)  {
 
 			if (!isConnected())
 				return;
+
+			if (hasCheckinInfo())
+				msg.setSenderId(id());
 
 			try {
 
@@ -147,6 +221,14 @@ namespace mnet {
 		*/
 		void onConnect() override {
 			m_connected = true;
+
+			if (hasCheckinInfo()) {
+				checkin();
+			}
+			else {
+				requestNetworkId();
+			}
+
 			handleConnect();
 		}
 
@@ -156,8 +238,8 @@ namespace mnet {
 		void onDisconnect() override {
 			super::onDisconnect();
 			m_connected = false;
-			handleDisconnect();
 			m_routes.clear();
+			handleDisconnect();
 		}
 
 		/**
@@ -201,11 +283,16 @@ namespace mnet {
 		std::string id2string(const NodeUUID& id) {
 			return std::to_string(id.getLsb()).append(std::to_string(id.getMsb()));
 		}
-
+		
+		// Fields
+		NodeUUID m_myId;
 		volatile bool m_connected;
 		MNetSerializer<se::culvertsoft::mnet::ClassRegistry> m_serializer;
 		std::map<std::string, Route> m_routes;
-		NodeUUID m_myId;
+		std::string m_name;
+		std::vector<std::string> m_tags;
+		QElapsedTimer m_announceTimer;
+
 		
 		// MNetClient is noncopyable
 		MNetClient(const MNetClient& other);

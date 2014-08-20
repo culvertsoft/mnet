@@ -10,6 +10,7 @@ namespace mnet {
 	
 	class ReconnectingWebSocket : public QThread {
 		Q_OBJECT
+		friend class WebSocket; // for callbacks
 
 	public:
 
@@ -51,7 +52,7 @@ namespace mnet {
 		}
 
 
-	public Q_SLOTS:
+	protected Q_SLOTS:
 	
 		/**
 		 * Called when connection is established.
@@ -84,6 +85,13 @@ namespace mnet {
 		virtual void onError(const QAbstractSocket::SocketError error) {
 		}
 
+		// Iteration method
+		virtual void step() {
+			if (!m_toLive) {
+				Q_EMIT reconnectOrQuit_signal();
+			}
+		}
+
 	Q_SIGNALS:
 		void reconnectOrQuit_signal();
 		void sendTextMessage_signal(const QString message);
@@ -98,7 +106,7 @@ namespace mnet {
 
 			// Create a thread which checks for missed stop events
 			QTimer timer;
-			connect(&timer, &QTimer::timeout, this, &ReconnectingWebSocket::checkForMissedStop, m_callbackPolicy);
+			connect(&timer, &QTimer::timeout, this, &ReconnectingWebSocket::step, m_callbackPolicy);
 			timer.start(100);
 
 			// Now run our reconnecting client
@@ -126,12 +134,6 @@ namespace mnet {
 			qDebug() << "WebSocket: finished";
 		}
 
-	private Q_SLOTS:
-		void checkForMissedStop() {
-			if (!m_toLive) {
-				Q_EMIT reconnectOrQuit_signal();
-			}
-		}
 
 	private:
 		QString m_url;
