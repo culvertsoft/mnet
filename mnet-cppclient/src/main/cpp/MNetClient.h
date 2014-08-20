@@ -4,11 +4,13 @@
 #include <se/culvertsoft/mnet/ClassRegistry.h>
 #include "ReconnectingWebSocket.h"
 #include "MNetSerializer.h"
+#include "Route.h"
 
 namespace mnet {
 
 	class MNetClient : private ReconnectingWebSocket {
 		typedef ReconnectingWebSocket super;
+		typedef se::culvertsoft::mnet::NodeUUID NodeUUID;
 		typedef se::culvertsoft::mnet::Message Message;
 	public:
 
@@ -37,8 +39,19 @@ namespace mnet {
 
 		}
 
+		/**
+		 * Note that route may be NULL, if the sender is unknown
+		 */
+		virtual void handleMessage(std::shared_ptr<Message> msg, Route * route) {
+
+		}
+
 		bool isRunning() const {
 			return super::isRunning();
+		}
+
+		const NodeUUID& id() const {
+			return m_myId;
 		}
 
 		virtual void handleConnect() {
@@ -49,9 +62,33 @@ namespace mnet {
 			qDebug() << "WebSocket: disconnected";
 		}
 
+	protected:
 
 		virtual void handleMessage(std::shared_ptr<Message> msg) {
-			
+			using namespace se::culvertsoft::mnet;
+			if (msg) {
+
+				Route * route = getRoute(msg->getSenderId());
+
+				switch (msg->_typeId()) {
+				case se::culvertsoft::mnet::IdCreateReply::_type_id:
+					m_myId = static_cast<se::culvertsoft::mnet::IdCreateReply&>(*msg).getCreatedId();
+					break;
+				default:
+					handleMessage(msg, route);
+				}
+			}
+		}
+
+		Route * getRoute(const NodeUUID& id) {
+			const std::string key = id2string(id);
+
+			if (m_routes.count(key)) {
+				return &m_routes[key];
+			}
+			else {
+				return 0;
+			}
 		}
 
 
@@ -112,8 +149,14 @@ namespace mnet {
 			qDebug() << "WebSocket: got error: " << error;
 		}
 
+		std::string id2string(const NodeUUID& id) {
+			return std::to_string(id.getLsb()).append(std::to_string(id.getMsb()));
+		}
+
 		volatile bool m_connected;
 		MNetSerializer<se::culvertsoft::mnet::ClassRegistry> m_serializer;
+		std::map<std::string, Route> m_routes;
+		NodeUUID m_myId;
 		
 		// MNetClient is noncopyable
 		MNetClient(const MNetClient& other);
