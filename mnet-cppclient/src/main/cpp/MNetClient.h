@@ -1,8 +1,6 @@
 #pragma once
 
 #include <memory>
-#include <QElapsedTimer>
-#include <QtCore/QMetaType>
 #include <QtCore/QTimer>
 #include <se/culvertsoft/mnet/ClassRegistry.h>
 #include "ReconnectingWebSocket.h"
