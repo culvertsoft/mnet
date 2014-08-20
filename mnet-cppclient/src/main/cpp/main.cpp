@@ -17,14 +17,11 @@ int main(int argc, char *argv[]) {
 
 	QSharedPointer<QCoreApplication> app = ensureQtAppOrCreateNew(argc, argv);
 
+	QEventLoop eventLoop;
+
 	mnet::MNetClient client("ws://localhost:80");
-	client.start();
-
-	Sleep(10000);
-	client.stop();
-
-	client.join();
-
+	eventLoop.exec();
+	
 	return 0;
 
 }

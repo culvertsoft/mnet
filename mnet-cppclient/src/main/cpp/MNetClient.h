@@ -2,14 +2,19 @@
 
 #include <memory>
 #include <QElapsedTimer>
+#include <QtCore/QMetaType>
+#include <QtCore/QTimer>
 #include <se/culvertsoft/mnet/ClassRegistry.h>
 #include "ReconnectingWebSocket.h"
 #include "MNetSerializer.h"
-#include "InstanceOf.h"
 #include "Route.h"
 
-namespace mnet {
+#define CASE_TYPE(T, varName, src) T * varName = dynamic_cast<T*>(src)
+typedef std::shared_ptr<se::culvertsoft::mnet::Message> SendItem;
+Q_DECLARE_METATYPE(SendItem);
 
+namespace mnet {
+	
 	class MNetClient : public ReconnectingWebSocket {
 		typedef ReconnectingWebSocket super;
 		typedef se::culvertsoft::mnet::NodeUUID NodeUUID;
@@ -21,9 +26,9 @@ namespace mnet {
 		typedef se::culvertsoft::mnet::ClassRegistry ClassRegistry;
 
 		Q_OBJECT
-
+		
 	public:
-
+		
 		MNetClient(
 			const QString& url,
 			const std::string& name = "unnamed_cpp_node",
@@ -32,51 +37,37 @@ namespace mnet {
 				m_connected(false),
 				m_name(name),
 				m_tags(tags) {
-
+			qRegisterMetaType<SendItem>("SendItem");
+			m_announceTimer.start(1000);
 			connect(this, &MNetClient::send_signal, this, &MNetClient::send_slot);
-			m_announceTimer.start();
+			connect(&m_announceTimer, &QTimer::timeout, this, &MNetClient::announce);
 		}
 
 		bool isConnected() const {
 			return m_connected;
 		}
-
-		void start() {
-			super::start();
-		}
-
-		void stop() {
-			super::stop();
-		}
-
-		void join() {
-			super::wait();
-		}
-
-		void send(const Message& message) {
+		
+		void send(SendItem message) {
 			Q_EMIT send_signal(message);
 		}
-
-		bool isRunning() const {
-			return super::isRunning();
-		}
-
+		
 		NodeUUID id() const {
 			return m_myId;
 		}
 
-	protected:
+	protected Q_SLOTS:
 
-		virtual void step() override {
-			super::step();
-			if (hasCheckinInfo() && m_announceTimer.elapsed() > 1000) {
-				m_announceTimer.restart();
-				checkin();
+		virtual void announce() {
+			if (isConnected() && hasId()) {
+				send(std::shared_ptr<NodeAnnouncement>(&(new NodeAnnouncement)
+					->setSenderId(id())
+					.setName(m_name)
+					.setTags(m_tags)));
 			}
 		}
 
 		// Note that route may be NULL, if the sender is unknown
-		virtual void handleMessage(std::shared_ptr<Message> msg, Route * route) {
+		virtual void handleMessage(std::shared_ptr<Message> msg, const Route * route) {
 		}
 
 		virtual void handleConnect() {
@@ -97,118 +88,103 @@ namespace mnet {
 
 	Q_SIGNALS:
 
-		void send_signal(const Message message);
+		void send_signal(SendItem message);
 
 	protected:
 
-		virtual bool hasCheckinInfo() const {
+		virtual bool hasId() const {
 			return id().hasLsb() && id().hasMsb();
-		}
-
-		virtual void checkin() {
-			if (isConnected() && hasCheckinInfo()) {
-				send(NodeAnnouncement()
-					.setSenderId(id())
-					.setName(m_name)
-					.setTags(m_tags));
-				qDebug() << "MNetClient: Checking in";
-			}
 		}
 
 		virtual void requestNetworkId() {
 			if (isConnected()) {
-				send(IdCreateRequest());
+				send(std::shared_ptr<Message>(new IdCreateRequest()));
 			}
 		}
 
-		virtual void handleMessage(std::shared_ptr<Message> msg) {
+		virtual void handleMessage(std::shared_ptr<Message> uknMsg) {
+			
 			using namespace se::culvertsoft::mnet;
-			if (msg) {
 
-				if (hasCheckinInfo() && msg->getSenderId() == id())
+			if (uknMsg) {
+
+				if (hasId() && uknMsg->getSenderId() == id())
 					return;
 
-				Route * route = getRoute(msg->getSenderId());
+				const Route * route = getRoute(uknMsg->getSenderId());
 
-				if (is_base<IdCreateReply>(*msg)) {
-					m_myId = static_cast<IdCreateReply&>(*msg).getCreatedId();
-					checkin();
+				if (CASE_TYPE(IdCreateReply, msg, uknMsg.get()))  {
+					m_myId = msg->getCreatedId();
+					announce();
 				}
-				else if (is_base<NodeAnnouncement>(*msg)) {
+				else if (CASE_TYPE(NodeAnnouncement, msg, uknMsg.get())) {
 
-					NodeAnnouncement& announcement = static_cast<NodeAnnouncement&>(*msg);
-
-					if (!announcement.hasSenderId()) {
+					if (!msg->hasSenderId()) {
 						qDebug() << "MNetClient: handleAnnounce: no senderId supplied";
 						return;
 					}
 
-					m_routes[id2string(announcement.getSenderId())] = Route(announcement);
+					m_routes[id2string(msg->getSenderId())] = Route(*msg);
 
-					handleAnnounce(announcement);
+					handleAnnounce(*msg);
 				}
-				else if (is_base<NodeDisconnect>(*msg)) {
+				else if (CASE_TYPE(NodeDisconnect, msg, uknMsg.get())) {
 
-					NodeDisconnect& discMsg = static_cast<NodeDisconnect&>(*msg);
-					if (!discMsg.hasDisconnectedNodeId()) {
+					if (!msg->hasDisconnectedNodeId()) {
 						qDebug() << "MNetClient: handleNodeDisconnect: no disconnectdId supplied";
 						return;
 					}
 
-					m_routes.erase(id2string(discMsg.getDisconnectedNodeId()));
+					m_routes.erase(id2string(msg->getDisconnectedNodeId()));
 
-					handleNodeDisconnect(discMsg);
+					handleNodeDisconnect(*msg);
 				}
 				else {
-					handleMessage(msg, route);
+					handleMessage(uknMsg, route);
 				}
 
 			}
+
 		}
 
 		virtual void handleError(const QAbstractSocket::SocketError error) {
 			qDebug() << "WebSocket: got error: " << error;
 		}
 
-		Route * getRoute(const NodeUUID& id) {
-			const std::string key = id2string(id);
-
-			if (m_routes.count(key)) {
-				return &m_routes[key];
-			}
-			else {
-				return 0;
-			}
+		const Route * getRoute(const NodeUUID& id) const {
+			const std::map<std::string, Route>::const_iterator it = m_routes.find(id2string(id));
+			return (it != m_routes.end()) ? &it->second : 0;
 		}
 
 	protected Q_SLOTS:
 
-		virtual void send_slot(Message msg)  {
-
+		virtual void send_slot(SendItem msg)  {
+			
+			if (!msg)
+				return;
+			
 			if (!isConnected())
 				return;
 
-			if (hasCheckinInfo())
-				msg.setSenderId(id());
-
+			if (hasId())
+				msg->setSenderId(id());
+			
 			try {
 
-				if (mnet::is_base<DataMessage>(msg)) {
+				if (CASE_TYPE(DataMessage, dataMsg, msg.get())) {
 
-					const DataMessage& dataMsg = static_cast<const DataMessage&>(msg);
-
-					if (dataMsg.hasBinaryData()) {
-						const std::vector<char>& data = m_serializer.writeBinary(dataMsg);
+					if (dataMsg->hasBinaryData()) {
+						const std::vector<char>& data = m_serializer.writeBinary(*dataMsg);
 						sendBinaryMessage(QByteArray(data.data(), data.size()));
 					}
 					else {
-						const std::vector<char>& data = m_serializer.writeJson(dataMsg);
+						const std::vector<char>& data = m_serializer.writeJson(*dataMsg);
 						sendTextMessage(QString::fromUtf8(data.data(), data.size()));
 					}
 
 				}
 				else {
-					const std::vector<char>& data = m_serializer.writeJson(msg);
+					const std::vector<char>& data = m_serializer.writeJson(*msg);
 					sendTextMessage(QString::fromUtf8(data.data(), data.size()));
 				}
 			}
@@ -226,8 +202,8 @@ namespace mnet {
 		void onConnect() override {
 			m_connected = true;
 
-			if (hasCheckinInfo()) {
-				checkin();
+			if (hasId()) {
+				announce();
 			}
 			else {
 				requestNetworkId();
@@ -286,7 +262,7 @@ namespace mnet {
 			handleError(error);
 		}
 
-		std::string id2string(const NodeUUID& id) {
+		std::string id2string(const NodeUUID& id) const {
 			return std::to_string(id.getLsb()).append(std::to_string(id.getMsb()));
 		}
 		
@@ -297,8 +273,10 @@ namespace mnet {
 		std::map<std::string, Route> m_routes;
 		std::string m_name;
 		std::vector<std::string> m_tags;
-		QElapsedTimer m_announceTimer;
+		QTimer m_announceTimer;
 
 	};
+
+#undef CASE_TYPE
 
 }
