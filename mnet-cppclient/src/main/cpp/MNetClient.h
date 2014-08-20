@@ -5,18 +5,24 @@
 #include "ReconnectingWebSocket.h"
 #include "MNetSerializer.h"
 #include "Route.h"
+#include "InstanceOf.h"
 
 namespace mnet {
 
-	class MNetClient : private ReconnectingWebSocket {
+	class MNetClient : public ReconnectingWebSocket {
 		typedef ReconnectingWebSocket super;
 		typedef se::culvertsoft::mnet::NodeUUID NodeUUID;
 		typedef se::culvertsoft::mnet::Message Message;
+		typedef se::culvertsoft::mnet::DataMessage DataMessage;
+
+		Q_OBJECT
+
 	public:
 
 		MNetClient(const QString& url) : 
 			ReconnectingWebSocket(url),
 			m_connected(false) {
+			connect(this, &MNetClient::send_signal, this, &MNetClient::send_slot);
 		}
 
 		bool isConnected() const {
@@ -35,8 +41,8 @@ namespace mnet {
 			super::wait();
 		}
 
-		void send(const se::culvertsoft::mnet::Message& message) {
-
+		void send(const Message& message) {
+			Q_EMIT send_signal(message);
 		}
 
 		/**
@@ -56,11 +62,16 @@ namespace mnet {
 
 		virtual void handleConnect() {
 			qDebug() << "WebSocket: connected";
+			send(se::culvertsoft::mnet::IdCreateRequest());
 		}
 
 		virtual void handleDisconnect() {
 			qDebug() << "WebSocket: disconnected";
 		}
+
+	Q_SIGNALS:
+
+		void send_signal(const Message message);
 
 	protected:
 
@@ -71,13 +82,17 @@ namespace mnet {
 				Route * route = getRoute(msg->getSenderId());
 
 				switch (msg->_typeId()) {
-				case se::culvertsoft::mnet::IdCreateReply::_type_id:
-					m_myId = static_cast<se::culvertsoft::mnet::IdCreateReply&>(*msg).getCreatedId();
+				case IdCreateReply::_type_id:
+					m_myId = static_cast<IdCreateReply&>(*msg).getCreatedId();
 					break;
 				default:
 					handleMessage(msg, route);
 				}
 			}
+		}
+
+		virtual void handleError(const QAbstractSocket::SocketError error) {
+			qDebug() << "WebSocket: got error: " << error;
 		}
 
 		Route * getRoute(const NodeUUID& id) {
@@ -91,7 +106,40 @@ namespace mnet {
 			}
 		}
 
+	protected Q_SLOTS:
 
+		virtual void send_slot(const Message msg)  {
+
+			if (!isConnected())
+				return;
+
+			try {
+
+				if (mnet::is_base<DataMessage>(msg)) {
+
+					const DataMessage& dataMsg = static_cast<const DataMessage&>(msg);
+
+					if (dataMsg.hasBinaryData()) {
+						const std::vector<char>& data = m_serializer.writeBinary(dataMsg);
+						sendBinaryMessage(QByteArray(data.data(), data.size()));
+					}
+					else {
+						const std::vector<char>& data = m_serializer.writeJson(dataMsg);
+						sendTextMessage(QString::fromUtf8(data.data(), data.size()));
+					}
+
+				}
+				else {
+					const std::vector<char>& data = m_serializer.writeJson(msg);
+					sendTextMessage(QString::fromUtf8(data.data(), data.size()));
+				}
+			}
+			catch (const mgen::Exception& e) {
+				qDebug() << "MNetClient:send_slot: exception: " << e.what();
+			}
+		}
+
+		
 	private:
 
 		/**
@@ -147,7 +195,7 @@ namespace mnet {
 		* Called when there is a websocket error.
 		*/
 		void onError(const QAbstractSocket::SocketError error) override {
-			qDebug() << "WebSocket: got error: " << error;
+			handleError(error);
 		}
 
 		std::string id2string(const NodeUUID& id) {

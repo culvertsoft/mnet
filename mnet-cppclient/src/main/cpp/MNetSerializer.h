@@ -47,7 +47,7 @@ namespace mnet {
 		std::vector<char> writeMessage(WriterType& writer, const Message& msg) {
 			m_outputStream.reset();
 			m_outputBuffer.clear();
-			writer.template writeObject(msg);
+			writer.writeObject(msg);
 			return m_outputBuffer;
 		}
 

@@ -29,7 +29,7 @@ namespace mnet {
 		* Signals this thread to send a text message.
 		* May be called from any thread
 		*/
-		void sendTextMessage(const QString message) {
+		void sendTextMessage(const QString& message) {
 			Q_EMIT sendTextMessage_signal(message);
 		}
 
@@ -37,7 +37,7 @@ namespace mnet {
 		* Signals this thread to send a binary message.
 		* May be called from any thread
 		*/
-		void sendBinaryMessage(const QByteArray message) {
+		void sendBinaryMessage(const QByteArray& message) {
 			Q_EMIT sendBinaryMessage_signal(message);
 		}
 
