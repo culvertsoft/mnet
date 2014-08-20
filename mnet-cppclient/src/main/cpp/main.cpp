@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
 	mnet::MNetClient client("ws://localhost:80");
 	client.start();
 
-	Sleep(1000);
+	Sleep(10000);
 	client.stop();
 
 	client.join();

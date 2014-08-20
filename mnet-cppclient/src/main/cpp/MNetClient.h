@@ -5,8 +5,8 @@
 #include <se/culvertsoft/mnet/ClassRegistry.h>
 #include "ReconnectingWebSocket.h"
 #include "MNetSerializer.h"
-#include "Route.h"
 #include "InstanceOf.h"
+#include "Route.h"
 
 namespace mnet {
 
@@ -17,6 +17,8 @@ namespace mnet {
 		typedef se::culvertsoft::mnet::DataMessage DataMessage;
 		typedef se::culvertsoft::mnet::NodeAnnouncement NodeAnnouncement;
 		typedef se::culvertsoft::mnet::NodeDisconnect NodeDisconnect;
+		typedef se::culvertsoft::mnet::IdCreateRequest IdCreateRequest;
+		typedef se::culvertsoft::mnet::ClassRegistry ClassRegistry;
 
 		Q_OBJECT
 
@@ -78,18 +80,19 @@ namespace mnet {
 		}
 
 		virtual void handleConnect() {
-			qDebug() << "MNetClient: handleConnect";
+			qDebug() << "MNetClient: connected";
 		}
 
 		virtual void handleDisconnect() {
-			qDebug() << "MNetClient: handleDisconnect";
+			qDebug() << "MNetClient: disconnected";
 		}
 
 		virtual void handleNodeDisconnect(const NodeDisconnect& msg) {
+			qDebug() << "MNetClient: redeived remote node disconnect: " << QString::fromStdString(id2string(msg.getDisconnectedNodeId()));
 		}
 
 		virtual void handleAnnounce(const NodeAnnouncement& announcement) {
-			qDebug() << "MNetClient: announcement: " << QString::fromStdString(id2string(announcement.getSenderId()));
+			qDebug() << "MNetClient: received announcement: " << QString::fromStdString(id2string(announcement.getSenderId()));
 		}
 
 	Q_SIGNALS:
@@ -108,12 +111,13 @@ namespace mnet {
 					.setSenderId(id())
 					.setName(m_name)
 					.setTags(m_tags));
+				qDebug() << "MNetClient: Checking in";
 			}
 		}
 
 		virtual void requestNetworkId() {
 			if (isConnected()) {
-				send(se::culvertsoft::mnet::IdCreateRequest());
+				send(IdCreateRequest());
 			}
 		}
 
@@ -256,6 +260,7 @@ namespace mnet {
 			catch (const mgen::Exception& e) {
 				qDebug() << "onTextMessage: exception: " << e.what();
 			}
+			qDebug() << "done onText";
 		}
 
 		/**
@@ -271,6 +276,7 @@ namespace mnet {
 			catch (const mgen::Exception& e) {
 				qDebug() << "onTextMessage: exception: " << e.what();
 			}
+			qDebug() << "done onBinary";
 		}
 
 		/**
@@ -287,16 +293,12 @@ namespace mnet {
 		// Fields
 		NodeUUID m_myId;
 		volatile bool m_connected;
-		MNetSerializer<se::culvertsoft::mnet::ClassRegistry> m_serializer;
+		MNetSerializer<ClassRegistry> m_serializer;
 		std::map<std::string, Route> m_routes;
 		std::string m_name;
 		std::vector<std::string> m_tags;
 		QElapsedTimer m_announceTimer;
 
-		
-		// MNetClient is noncopyable
-		MNetClient(const MNetClient& other);
-		MNetClient& operator=(const MNetClient& other);
 	};
 
 }
