@@ -9,6 +9,7 @@ namespace mnet {
 
 	class MNetClient : private ReconnectingWebSocket {
 		typedef ReconnectingWebSocket super;
+		typedef se::culvertsoft::mnet::Message Message;
 	public:
 
 		MNetClient(const QString& url) : 
@@ -49,7 +50,7 @@ namespace mnet {
 		}
 
 
-		virtual void handleMessage(std::shared_ptr<se::culvertsoft::mnet::Message> msg) {
+		virtual void handleMessage(std::shared_ptr<Message> msg) {
 			
 		}
 
@@ -81,7 +82,12 @@ namespace mnet {
 			QByteArray utf8Data = message.toUtf8();
 			const char * dataPtr = utf8Data.constBegin();
 			const int length = utf8Data.size();
-			m_serializer.readJson(dataPtr, length);
+			try {
+				handleMessage(m_serializer.readJson(dataPtr, length));
+			}
+			catch (const mgen::Exception& e) {
+				qDebug() << "onTextMessage: exception: " << e.what();
+			}
 		}
 
 		/**
@@ -89,6 +95,14 @@ namespace mnet {
 		*/
 		void onBinaryMessage(const QByteArray message) override {
 			qDebug() << "WebSocket: got binary of size: " << message.size();
+			const char * dataPtr = message.constBegin();
+			const int length = message.size();
+			try {
+				handleMessage(m_serializer.readBinary(dataPtr, length));
+			}
+			catch (const mgen::Exception& e) {
+				qDebug() << "onTextMessage: exception: " << e.what();
+			}
 		}
 
 		/**
