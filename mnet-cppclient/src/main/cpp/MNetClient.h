@@ -109,6 +109,7 @@ namespace mnet {
 			super::onDisconnect();
 			m_connected = false;
 			handleDisconnect();
+			m_routes.clear();
 		}
 
 		/**
