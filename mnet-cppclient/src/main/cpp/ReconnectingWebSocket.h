@@ -18,7 +18,7 @@ namespace mnet {
 		* whether callbacks are run on the internal socket thread or sent as
 		* messages to an external qt event loop (that you must start).
 		*/
-		ReconnectingWebSocket(const QString& url, Qt::ConnectionType callbackPolicy) :
+		ReconnectingWebSocket(const QString& url, Qt::ConnectionType callbackPolicy = Qt::DirectConnection) :
 				m_url(url),
 				m_toLive(true),
 				m_callbackPolicy(callbackPolicy) {
@@ -37,7 +37,7 @@ namespace mnet {
 		* Signals this thread to send a binary message.
 		* May be called from any thread
 		*/
-		void sendTextMessage(const QByteArray message) {
+		void sendBinaryMessage(const QByteArray message) {
 			Q_EMIT sendBinaryMessage_signal(message);
 		}
 
@@ -50,20 +50,19 @@ namespace mnet {
 			Q_EMIT reconnectOrQuit_signal();
 		}
 
+
 	public Q_SLOTS:
 	
 		/**
 		 * Called when connection is established.
 		 */
 		virtual void onConnect() {
-			qDebug() << "WebSocket: connected";
 		}
 
 		/**
 		* Called when connection is lost.
 		*/
 		virtual void onDisconnect() {
-			qDebug() << "WebSocket: disconnected";
 			Q_EMIT reconnectOrQuit_signal();
 		}
 
@@ -71,21 +70,18 @@ namespace mnet {
 		* Called when a text message is received.
 		*/
 		virtual void onTextMessage(const QString message) {
-			qDebug() << "WebSocket: got text: " << message;
 		}
 
 		/**
 		* Called when a binary message is received.
 		*/
 		virtual void onBinaryMessage(const QByteArray message) {
-			qDebug() << "WebSocket: got binary of size: " << message.size();
 		}
 
 		/**
 		* Called when there is a websocket error.
 		*/
 		virtual void onError(const QAbstractSocket::SocketError error) {
-			qDebug() << "WebSocket: got error: " << error;
 		}
 
 	Q_SIGNALS:
@@ -126,6 +122,7 @@ namespace mnet {
 				disconnect(binarySendConnection);
 
 			}
+
 			qDebug() << "WebSocket: finished";
 		}
 

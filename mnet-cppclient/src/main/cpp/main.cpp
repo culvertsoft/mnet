@@ -1,5 +1,6 @@
 #include <QtCore/QCoreApplication>
-#include "ReconnectingWebSocket.h"
+#include <se/culvertsoft/mnet/ClassRegistry.cpp>
+#include "MNetClient.h"
 #include <Windows.h>
 
 static void noop_deleter(QCoreApplication * app) {}
@@ -16,13 +17,13 @@ int main(int argc, char *argv[]) {
 
 	QSharedPointer<QCoreApplication> app = ensureQtAppOrCreateNew(argc, argv);
 
-	mnet::ReconnectingWebSocket client("ws://localhost:80", Qt::DirectConnection);
+	mnet::MNetClient client("ws://localhost:80");
 	client.start();
 
 	Sleep(1000);
 	client.stop();
 
-	client.wait();
+	client.join();
 
 	return 0;
 

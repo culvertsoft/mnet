@@ -1,0 +1,12 @@
+<Project>
+
+    <Dependency>../../../../mnet-api/src/main/model/project.xml</Dependency>
+        
+    <Generator name="Cpp">
+        <class_path>se.culvertsoft.mgen.cpppack.generator.CppGenerator</class_path>
+        <output_path>src/main/cpp_generated</output_path>
+        <classregistry_path>se.culvertsoft.mnet</classregistry_path>
+        <generate_unity_build>true</generate_unity_build>
+    </Generator>
+    
+</Project>
