@@ -20,8 +20,8 @@ add_executable( ${PROJECT_NAME}
                 main/cpp/main.cpp    
                 main/cpp/WebSocket.h
                 main/cpp/ReconnectingWebSocket.h
-				main/cpp/MNetClient.h
-				main/cpp/MNetSerializer.h 
-				main/cpp/Route.h )
+                main/cpp/MNetClient.h
+                main/cpp/MNetSerializer.h 
+                main/cpp/Route.h )
 
 target_link_libraries(${PROJECT_NAME} Qt5::WebSockets)
