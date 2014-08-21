@@ -3,9 +3,11 @@ name := "mnet-backend"
 
 organization := "se.culvertsoft"
 
-version := scala.util.Properties.envOrElse("MNEN_BUILD_VERSION", "SNAPSHOT")
+version := scala.util.Properties.envOrElse("MNET_BUILD_VERSION", "SNAPSHOT")
 
 isSnapshot := version.value.contains("SNAPSHOT")
+
+resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
 crossPaths := false
 

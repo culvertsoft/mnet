@@ -9,7 +9,7 @@ def clean():
     rmFolders(".", "src_generated")
     sbt_clean(".")
     #TODO: clean cppclient
-    
+
 def build():
     generate_models()
     build_java_and_scala()
@@ -22,8 +22,8 @@ def eclipse():
     sbt_eclipse(".")
 
 def publish():
-    print("publish() not yet implemented!")
-    
+    publish_impl()
+
 def deploy(folder):
     mkFolder(folder)
     for jarFile in findFiles(".", '*assembly*.jar*'):
@@ -46,7 +46,7 @@ def generate_models():
     check_call("mgen src/main/model/project.xml", cwd="mnet-api", shell=True)
     check_call("mgen src/main/model/project.xml", cwd="mnet-backend", shell=True)
     check_call("mgen src/main/model/project.xml", cwd="mnet-cppclient", shell=True)
-    
+
 def build_java_and_scala():
     sbt(".",   ('"project mnet_api" publish-local '
                 '"project mnet_backend" publish-local '
@@ -54,4 +54,8 @@ def build_java_and_scala():
 
 def build_cpp():
     print("build_cpp() not yet implemented!")
-               
+
+def publish_impl():
+    sbt(".",   ('"project mnet_api" publish-signed '
+                '"project mnet_backend" publish-signed '
+                '"project mnet_javaclient" publish-signed '))

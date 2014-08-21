@@ -5,6 +5,8 @@ name := "mnet"
 
 organization := "se.culvertsoft"
 
+resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+
 version := scala.util.Properties.envOrElse("MNET_BUILD_VERSION", "SNAPSHOT")
 
 isSnapshot := version.value.contains("SNAPSHOT")
