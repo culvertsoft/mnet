@@ -43,7 +43,7 @@ def compile(workingDir, project):
     compile3(workingDir, project, ".")
 
 def generate_models():
-    #check_call("mgen src/main/model/project.xml", cwd="mnet-api", shell=True)
+    check_call("mgen src/main/model/project.xml", cwd="mnet-api", shell=True)
     check_call("mgen src/main/model/project.xml", cwd="mnet-backend", shell=True)
     check_call("mgen src/main/model/project.xml", cwd="mnet-cppclient", shell=True)
     
