@@ -4,21 +4,11 @@
 
 namespace mnet {
 
-	/**
-	* Stops this client.
-	*/
 	class WebSocket : public QObject
 	{
 		Q_OBJECT
 
 	public:
-
-		/**********************************************************
-		*
-		*
-		*					PUBLIC API
-		*
-		**********************************************************/
 
 		WebSocket(const QString& url) : m_url(url) {
 		}
