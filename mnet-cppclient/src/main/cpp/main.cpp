@@ -1,7 +1,6 @@
 #include <QtCore/QCoreApplication>
 #include <se/culvertsoft/mnet/ClassRegistry.cpp>
 #include "MNetClient.h"
-#include <Windows.h>
 
 static void noop_deleter(QCoreApplication * app) {}
 
