@@ -18,8 +18,8 @@ class CanSendMessage {
     val b1Msgs = new ConcurrentLinkedQueue[Message]
     val b2Msgs = new ConcurrentLinkedQueue[Message]
 
-    val b1 = TestUtils.newNode(400)(b1Msgs.add).start()
-    val b2 = TestUtils.newNode(401)(b2Msgs.add).start()
+    val b1 = TestUtils.newNode(1400)(b1Msgs.add).start()
+    val b2 = TestUtils.newNode(1401)(b2Msgs.add).start()
 
     val ws1 = b1.getBackEnd[WebSockBackEnd]
     val ws2 = b2.getBackEnd[WebSockBackEnd]

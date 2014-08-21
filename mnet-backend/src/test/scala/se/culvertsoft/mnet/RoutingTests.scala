@@ -18,7 +18,7 @@ class RoutingTests {
 
     val n = 20
     val nodes = new ArrayBuffer[Node]
-    val portMaker = new PortMaker(1100)
+    val portMaker = new PortMaker(11100)
 
     val firstNode = TestUtils
       .newNode(portMaker.nextPort)()
@@ -49,7 +49,7 @@ class RoutingTests {
 
     val n = 20
     val nodes = new ArrayBuffer[Node]
-    val portMaker = new PortMaker(1200)
+    val portMaker = new PortMaker(11200)
 
     val firstNode = TestUtils
       .newNode(portMaker.nextPort)()
@@ -77,7 +77,7 @@ class RoutingTests {
   @Test
   def bridged() {
 
-    val portMaker = new PortMaker(1300)
+    val portMaker = new PortMaker(11300)
 
     val leftMost = TestUtils.newNode(portMaker.nextPort)().start()
     val leftCenter = TestUtils.newNode(portMaker.nextPort)().start()
@@ -98,7 +98,7 @@ class RoutingTests {
   @Test
   def bridgedMessaging() {
 
-    val portMaker = new PortMaker(1400)
+    val portMaker = new PortMaker(11400)
 
     val leftMostCollect = new ConcurrentLinkedQueue[Message]
     val leftCenterCollect = new ConcurrentLinkedQueue[Message]
@@ -132,7 +132,7 @@ class RoutingTests {
   @Test
   def aBridgeTooFar() {
 
-    val portMaker = new PortMaker(1500)
+    val portMaker = new PortMaker(11500)
 
     val leftMost = TestUtils.newNode(portMaker.nextPort)().start()
     val leftCenter = TestUtils.newNode(portMaker.nextPort)().start()

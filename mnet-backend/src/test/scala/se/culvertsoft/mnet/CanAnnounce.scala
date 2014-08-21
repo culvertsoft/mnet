@@ -13,8 +13,8 @@ class CanAnnounce {
   @Test
   def canAnnounceOnBackend() {
 
-    val b1 = TestUtils.newNode(300)().start()
-    val b2 = TestUtils.newNode(301)().start()
+    val b1 = TestUtils.newNode(1300)().start()
+    val b2 = TestUtils.newNode(1301)().start()
 
     val ws1 = b1.getBackEnd[WebSockBackEnd]
     val ws2 = b2.getBackEnd[WebSockBackEnd]

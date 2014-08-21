@@ -12,7 +12,7 @@ class CanConnect {
   @Test
   def test() {
 
-    val b = TestUtils.newNode(200)().start()
+    val b = TestUtils.newNode(1200)().start()
     val port = b.getBackEnd[WebSockBackEnd].listenPort
 
     @volatile var gotMsg: Message = null

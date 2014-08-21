@@ -7,7 +7,7 @@ class CanClose {
   @Test
   def test() {
     TestUtils
-      .newNode(100)()
+      .newNode(1100)()
       .start()
       .stop()
   }

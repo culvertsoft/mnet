@@ -95,10 +95,15 @@ class Node(settings: NodeSettings = new NodeSettings) {
    * If the message does NOT have a targetId, it is considered a broadcast. See broadcast(..).
    */
   def send(msg: Message): Node = {
+
+    if (!msg.hasSenderId())
+      msg.setSenderId(id)
+
     if (msg.hasTargetId)
       sendImpl(msg)
     else
       broadcast(msg)
+
   }
 
   /**
@@ -140,7 +145,7 @@ class Node(settings: NodeSettings = new NodeSettings) {
   def announce() {
     broadcast(createAnnouncement())
   }
-  
+
   /**
    * Gets a route to the specified endpoint ID, or null if no route is known.
    */
@@ -276,8 +281,13 @@ class Node(settings: NodeSettings = new NodeSettings) {
 
     incHops(msg)
 
-    // check expected route to get this msg
     if (msg.hasSenderId) {
+
+      // check that we didn't send this
+      if (msg.getSenderId() == id)
+        return
+
+      // check expected route to get this msg
       val expectedRoute = getRoute(msg.getSenderId)
       if (expectedRoute != null && expectedRoute.connection != connection)
         return
