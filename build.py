@@ -17,7 +17,7 @@ parser.add_argument("-v", "--version", default="SNAPSHOT")
 args = parser.parse_args()
 
 # Buildimpl requires these to be set
-os.environ['MNEN_BUILD_VERSION'] = args.version
+os.environ['MNET_BUILD_VERSION'] = args.version
 buildimpl.default_cpp_build_cfg = "RelwithDebInfo" # Because VS is epicly slow in debug
 
 # Targets 

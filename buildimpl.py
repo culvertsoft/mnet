@@ -7,12 +7,13 @@ from buildutil import *
 
 def clean():
     rmFolders(".", "src_generated")
+    rmFolder("mnet-cppclient/target")
     sbt_clean(".")
-    #TODO: clean cppclient
 
 def build():
     generate_models()
-    build_java_and_scala()
+    #build_cpp()#Currently not building cpp from python until jenkins has qt installed
+    build_java_and_scala()    
 
 def test():
     sbt_test(".")
@@ -53,7 +54,8 @@ def build_java_and_scala():
                 '"project mnet_javaclient" assembly publish-local '))
 
 def build_cpp():
-    print("build_cpp() not yet implemented!")
+    mkFolder("mnet-cppclient/target")
+    cmake("mnet-cppclient/target", "../src", "Debug")
 
 def publish_impl():
     sbt(".",   ('"project mnet_api" publish-signed '
