@@ -1,7 +1,7 @@
 #include <iostream>
 #include <QtCore/QCoreApplication>
 #include <se/culvertsoft/mnet/ClassRegistry.cpp>
-#include "MNetClient.h"
+#include <mnet/MNetClient.h>
 #include "File2Vector.h"
 
 static void noop_deleter(QCoreApplication * app) {}

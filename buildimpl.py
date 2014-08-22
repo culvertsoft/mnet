@@ -55,7 +55,7 @@ def build_java_and_scala():
 
 def build_cpp():
     mkFolder("mnet-cppclient/target")
-    cmake("mnet-cppclient/target", "../src", "Debug")
+    cmake("mnet-cppclient/target", "../src/test/cpp", "Debug")
 
 def publish_impl():
     sbt(".",   ('"project mnet_api" publish-signed '

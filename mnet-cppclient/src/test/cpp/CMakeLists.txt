@@ -18,15 +18,17 @@ set(CMAKE_AUTOMOC ON)
 find_package(Qt5WebSockets)
 
 include_directories(    $ENV{MGEN_INSTALL_PATH}/include
-                        main/cpp_generated    )
+                        ${CMAKE_CURRENT_SOURCE_DIR}
+                        ../../main/cpp
+                        ../../main/cpp_generated   )
 
 add_executable( ${PROJECT_NAME} 
-                main/cpp/test_main.cpp    
-                main/cpp/File2Vector.h
-                main/cpp/MNetClient.h
-                main/cpp/MNetSerializer.h 
-                main/cpp/ReconnectingWebSocket.h
-                main/cpp/Route.h 
-                main/cpp/WebSocket.h )
+                test_main.cpp    
+                File2Vector.h
+                ../../main/cpp/mnet/MNetClient.h
+                ../../main/cpp/mnet/MNetSerializer.h 
+                ../../main/cpp/mnet/ReconnectingWebSocket.h
+                ../../main/cpp/mnet/Route.h 
+                ../../main/cpp/mnet/WebSocket.h )
 
 target_link_libraries(${PROJECT_NAME} Qt5::WebSockets)
