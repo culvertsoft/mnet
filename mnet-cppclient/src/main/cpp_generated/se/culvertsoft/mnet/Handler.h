@@ -33,6 +33,7 @@ class Handler  {
 	virtual void handle(se::culvertsoft::mnet::DataMessage& o);
 	virtual void handle(se::culvertsoft::mnet::NodeDisconnect& o);
 	virtual void handle(se::culvertsoft::mnet::ErrorMessage& o);
+	virtual void handle(se::culvertsoft::mnet::cppclient::ClientConfiguration& o);
 
 }; // End class Handler
 

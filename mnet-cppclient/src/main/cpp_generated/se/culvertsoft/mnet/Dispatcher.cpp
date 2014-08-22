@@ -52,6 +52,9 @@ void dispatch(mgen::MGenBase& object, se::culvertsoft::mnet::Handler& handler) {
 					break;
 			}
 			break;
+		case se::culvertsoft::mnet::cppclient::ClientConfiguration::_type_id_16bit:
+			handler.handle(static_cast<se::culvertsoft::mnet::cppclient::ClientConfiguration&>(object));
+			break;
 		default:
 			handler.handleUnknown(object);
 			break;

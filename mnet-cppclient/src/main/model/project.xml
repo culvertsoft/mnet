@@ -9,4 +9,8 @@
         <generate_unity_build>true</generate_unity_build>
     </Generator>
     
+    <Sources>
+        <Source>se.culvertsoft.mnet.cppclient.xml</Source>
+    </Sources>
+    
 </Project>

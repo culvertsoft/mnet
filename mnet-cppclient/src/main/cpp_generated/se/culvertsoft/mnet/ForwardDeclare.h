@@ -31,5 +31,17 @@ class ErrorMessage;
 } // End namespace culvertsoft
 } // End namespace se
 
+namespace se {
+namespace culvertsoft {
+namespace mnet {
+namespace cppclient {
+
+class ClientConfiguration;
+
+} // End namespace cppclient
+} // End namespace mnet
+} // End namespace culvertsoft
+} // End namespace se
+
 
 #endif

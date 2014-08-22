@@ -18,6 +18,7 @@
 #include "se/culvertsoft/mnet/DataMessage.cpp"
 #include "se/culvertsoft/mnet/NodeDisconnect.cpp"
 #include "se/culvertsoft/mnet/ErrorMessage.cpp"
+#include "se/culvertsoft/mnet/cppclient/ClientConfiguration.cpp"
 #include "se/culvertsoft/mnet/Dispatcher.cpp"
 #include "se/culvertsoft/mnet/Handler.cpp"
 
@@ -36,6 +37,7 @@ ClassRegistry::ClassRegistry() {
 	add<se::culvertsoft::mnet::DataMessage>();
 	add<se::culvertsoft::mnet::NodeDisconnect>();
 	add<se::culvertsoft::mnet::ErrorMessage>();
+	add<se::culvertsoft::mnet::cppclient::ClientConfiguration>();
 }
 
 ClassRegistry::~ClassRegistry() {
@@ -52,6 +54,7 @@ const mgen::ClassRegistryEntry * se::culvertsoft::mnet::ClassRegistry::getByIds(
 	static const mgen::ClassRegistryEntry se_culvertsoft_mnet_DataMessage(se::culvertsoft::mnet::DataMessage::_type_ids(), se::culvertsoft::mnet::DataMessage::_type_name(), se::culvertsoft::mnet::DataMessage::_newInstance);
 	static const mgen::ClassRegistryEntry se_culvertsoft_mnet_NodeDisconnect(se::culvertsoft::mnet::NodeDisconnect::_type_ids(), se::culvertsoft::mnet::NodeDisconnect::_type_name(), se::culvertsoft::mnet::NodeDisconnect::_newInstance);
 	static const mgen::ClassRegistryEntry se_culvertsoft_mnet_ErrorMessage(se::culvertsoft::mnet::ErrorMessage::_type_ids(), se::culvertsoft::mnet::ErrorMessage::_type_name(), se::culvertsoft::mnet::ErrorMessage::_newInstance);
+	static const mgen::ClassRegistryEntry se_culvertsoft_mnet_cppclient_ClientConfiguration(se::culvertsoft::mnet::cppclient::ClientConfiguration::_type_ids(), se::culvertsoft::mnet::cppclient::ClientConfiguration::_type_name(), se::culvertsoft::mnet::cppclient::ClientConfiguration::_newInstance);
 
 	std::size_t i = 0;
 	switch(i < ids.size() ? ids[i++] : mgen::ClassRegistryBase::INVALID_16BIT_ID) {
@@ -89,6 +92,9 @@ const mgen::ClassRegistryEntry * se::culvertsoft::mnet::ClassRegistry::getByIds(
 					break;
 			}
 			break;
+		case se::culvertsoft::mnet::cppclient::ClientConfiguration::_type_id_16bit:
+			return &se_culvertsoft_mnet_cppclient_ClientConfiguration;
+			break;
 		default:
 			return 0;
 			break;
@@ -107,6 +113,7 @@ const mgen::ClassRegistryEntry * se::culvertsoft::mnet::ClassRegistry::getByIds(
 	static const mgen::ClassRegistryEntry se_culvertsoft_mnet_DataMessage(se::culvertsoft::mnet::DataMessage::_type_ids(), se::culvertsoft::mnet::DataMessage::_type_name(), se::culvertsoft::mnet::DataMessage::_newInstance);
 	static const mgen::ClassRegistryEntry se_culvertsoft_mnet_NodeDisconnect(se::culvertsoft::mnet::NodeDisconnect::_type_ids(), se::culvertsoft::mnet::NodeDisconnect::_type_name(), se::culvertsoft::mnet::NodeDisconnect::_newInstance);
 	static const mgen::ClassRegistryEntry se_culvertsoft_mnet_ErrorMessage(se::culvertsoft::mnet::ErrorMessage::_type_ids(), se::culvertsoft::mnet::ErrorMessage::_type_name(), se::culvertsoft::mnet::ErrorMessage::_newInstance);
+	static const mgen::ClassRegistryEntry se_culvertsoft_mnet_cppclient_ClientConfiguration(se::culvertsoft::mnet::cppclient::ClientConfiguration::_type_ids(), se::culvertsoft::mnet::cppclient::ClientConfiguration::_type_name(), se::culvertsoft::mnet::cppclient::ClientConfiguration::_newInstance);
 
 	std::size_t i = 0;
 	switch(i < ids.size() ? getTypeId16bitFromTypeId16BitBase64(ids[i++]) : mgen::ClassRegistryBase::INVALID_16BIT_ID) {
@@ -143,6 +150,9 @@ const mgen::ClassRegistryEntry * se::culvertsoft::mnet::ClassRegistry::getByIds(
 					return &se_culvertsoft_mnet_Message;
 					break;
 			}
+			break;
+		case se::culvertsoft::mnet::cppclient::ClientConfiguration::_type_id_16bit:
+			return &se_culvertsoft_mnet_cppclient_ClientConfiguration;
 			break;
 		default:
 			return 0;

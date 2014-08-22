@@ -1,0 +1,7 @@
+<Module>
+    <Types>
+        <ClientConfiguration>
+            <url type="string" flags="required"/>
+        </ClientConfiguration>
+    </Types>
+</Module>

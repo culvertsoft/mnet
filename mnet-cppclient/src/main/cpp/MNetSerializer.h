@@ -26,40 +26,50 @@ namespace mnet {
 		}
 
 		std::shared_ptr<Message> readJson(const char * data, const int length) {
-			return readMessage(m_jsonReader, data, length);
+			return readJson<Message>(data, length);
+		}
+
+		template <typename ObjectType>
+		std::shared_ptr<ObjectType> readJson(const char * data, const int length) {
+			return readObject<ObjectType>(m_jsonReader, data, length);
 		}
 
 		std::shared_ptr<Message> readBinary(const char * data, const int length) {
-			return readMessage(m_binaryReader, data, length);
+			return readBinary<Message>(data, length);
 		}
 
-		std::vector<char> writeJson(const Message& msg) {
+		template <typename ObjectType>
+		std::shared_ptr<ObjectType> readBinary(const char * data, const int length) {
+			return readObject<ObjectType>(m_binaryReader, data, length);
+		}
+
+		std::vector<char> writeJson(const mgen::MGenBase& msg) {
 			return writeMessage(m_jsonWriter, msg);
 		}
 
-		std::vector<char> writeBinary(const Message& msg) {
+		std::vector<char> writeBinary(const mgen::MGenBase& msg) {
 			return writeMessage(m_binaryWriter, msg);
 		}
 
 	private:
 
 		template <typename WriterType>
-		std::vector<char> writeMessage(WriterType& writer, const Message& msg) {
+		std::vector<char> writeMessage(WriterType& writer, const mgen::MGenBase& msg) {
 			m_outputStream.reset();
 			m_outputBuffer.clear();
 			writer.writeObject(msg);
 			return m_outputBuffer;
 		}
 
-		template <typename ReaderType>
-		std::shared_ptr<Message> readMessage(
+		template <typename ObjectType, typename ReaderType>
+		std::shared_ptr<ObjectType> readObject(
 			ReaderType& reader,
 			const char * data, 
 			const int length) {
 			m_inputStream.reset();
 			m_inputBuffer.clear();
 			m_inputBuffer.insert(m_inputBuffer.end(), data, data + length);
-			return std::shared_ptr<Message>(reader.template readObject<Message>());
+			return std::shared_ptr<ObjectType>(reader.template readObject<ObjectType>());
 		}
 
 		ClassRegistryType m_classRegistry;

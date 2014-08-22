@@ -17,6 +17,7 @@
 #include "se/culvertsoft/mnet/DataMessage.h"
 #include "se/culvertsoft/mnet/NodeDisconnect.h"
 #include "se/culvertsoft/mnet/ErrorMessage.h"
+#include "se/culvertsoft/mnet/cppclient/ClientConfiguration.h"
 
 namespace se {
 namespace culvertsoft {
@@ -71,6 +72,10 @@ void Handler::handle(se::culvertsoft::mnet::NodeDisconnect& o) {
 
 void Handler::handle(se::culvertsoft::mnet::ErrorMessage& o) {
 	handle(static_cast<se::culvertsoft::mnet::Message&>(o));
+}
+
+void Handler::handle(se::culvertsoft::mnet::cppclient::ClientConfiguration& o) {
+	handleDiscard(o);
 }
 
 

@@ -21,6 +21,7 @@
 #include "se/culvertsoft/mnet/DataMessage.h"
 #include "se/culvertsoft/mnet/NodeDisconnect.h"
 #include "se/culvertsoft/mnet/ErrorMessage.h"
+#include "se/culvertsoft/mnet/cppclient/ClientConfiguration.h"
 
 namespace se {
 namespace culvertsoft {
@@ -73,6 +74,9 @@ public:
 						break;
 				}
 				break;
+			case se::culvertsoft::mnet::cppclient::ClientConfiguration::_type_id_16bit:
+				reader.readFields(static_cast<se::culvertsoft::mnet::cppclient::ClientConfiguration&>(o), context);
+				break;
 			default:
 				return;
 				break;
@@ -121,6 +125,9 @@ public:
 						break;
 				}
 				break;
+			case se::culvertsoft::mnet::cppclient::ClientConfiguration::_type_id_16bit:
+				static_cast<se::culvertsoft::mnet::cppclient::ClientConfiguration&>(o)._accept<VisitorType>(visitor, selection);
+				break;
 			default:
 				return;
 				break;
@@ -168,6 +175,9 @@ public:
 						static_cast<const se::culvertsoft::mnet::Message&>(o)._accept<VisitorType>(visitor, selection);
 						break;
 				}
+				break;
+			case se::culvertsoft::mnet::cppclient::ClientConfiguration::_type_id_16bit:
+				static_cast<const se::culvertsoft::mnet::cppclient::ClientConfiguration&>(o)._accept<VisitorType>(visitor, selection);
 				break;
 			default:
 				return;

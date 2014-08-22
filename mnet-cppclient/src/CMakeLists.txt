@@ -21,11 +21,12 @@ include_directories(    $ENV{MGEN_INSTALL_PATH}/include
                         main/cpp_generated    )
 
 add_executable( ${PROJECT_NAME} 
-                main/cpp/main.cpp    
-                main/cpp/WebSocket.h
-                main/cpp/ReconnectingWebSocket.h
+                main/cpp/test_main.cpp    
+                main/cpp/File2Vector.h
                 main/cpp/MNetClient.h
                 main/cpp/MNetSerializer.h 
-                main/cpp/Route.h )
+                main/cpp/ReconnectingWebSocket.h
+                main/cpp/Route.h 
+                main/cpp/WebSocket.h )
 
 target_link_libraries(${PROJECT_NAME} Qt5::WebSockets)
