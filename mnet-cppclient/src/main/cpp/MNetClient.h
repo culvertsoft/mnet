@@ -7,23 +7,24 @@
 #include "MNetSerializer.h"
 #include "Route.h"
 
-#define CASE_TYPE(T, varName, src) T * varName = dynamic_cast<T*>(src)
-typedef std::shared_ptr<se::culvertsoft::mnet::Message> SendItem;
-Q_DECLARE_METATYPE(SendItem);
+Q_DECLARE_METATYPE(std::shared_ptr<se::culvertsoft::mnet::Message>);
 
 namespace mnet {
-	
+
+	#define CASE_TYPE(T, varName, src) T * varName = dynamic_cast<T*>(src)
+
+	typedef std::shared_ptr<se::culvertsoft::mnet::Message> MsgPtr;
+	using se::culvertsoft::mnet::NodeUUID;
+	using se::culvertsoft::mnet::Message;
+	using se::culvertsoft::mnet::DataMessage;
+	using se::culvertsoft::mnet::NodeAnnouncement;
+	using se::culvertsoft::mnet::NodeDisconnect;
+	using se::culvertsoft::mnet::IdCreateRequest;
+	using se::culvertsoft::mnet::ClassRegistry;
+	using se::culvertsoft::mnet::IdCreateReply;
+
 	class MNetClient : public ReconnectingWebSocket {
 		typedef ReconnectingWebSocket super;
-		typedef se::culvertsoft::mnet::NodeUUID NodeUUID;
-		typedef se::culvertsoft::mnet::Message Message;
-		typedef se::culvertsoft::mnet::DataMessage DataMessage;
-		typedef se::culvertsoft::mnet::NodeAnnouncement NodeAnnouncement;
-		typedef se::culvertsoft::mnet::NodeDisconnect NodeDisconnect;
-		typedef se::culvertsoft::mnet::IdCreateRequest IdCreateRequest;
-		typedef se::culvertsoft::mnet::ClassRegistry ClassRegistry;
-		typedef se::culvertsoft::mnet::IdCreateReply IdCreateReply;
-
 		Q_OBJECT
 		
 	public:
@@ -36,7 +37,7 @@ namespace mnet {
 				m_connected(false),
 				m_name(name),
 				m_tags(tags) {
-			qRegisterMetaType<SendItem>("SendItem");
+			qRegisterMetaType<MsgPtr>("MsgPtr");
 			m_announceTimer.start(1000);
 			connect(this, &MNetClient::send_signal, this, &MNetClient::send_slot);
 			connect(&m_announceTimer, &QTimer::timeout, this, &MNetClient::announce);
@@ -46,7 +47,7 @@ namespace mnet {
 			return m_connected;
 		}
 		
-		void send(SendItem message) {
+		void send(MsgPtr message) {
 			Q_EMIT send_signal(message);
 		}
 		
@@ -58,7 +59,7 @@ namespace mnet {
 
 		virtual void announce() {
 			if (isConnected() && hasId()) {
-				send(std::shared_ptr<NodeAnnouncement>(&(new NodeAnnouncement)
+				send(MsgPtr(&(new NodeAnnouncement)
 					->setSenderId(id())
 					.setName(m_name)
 					.setTags(m_tags)));
@@ -66,7 +67,7 @@ namespace mnet {
 		}
 
 		// Note that route may be NULL, if the sender is unknown
-		virtual void handleMessage(std::shared_ptr<Message> msg, const Route * route) {
+		virtual void handleMessage(MsgPtr msg, const Route * route) {
 		}
 
 		virtual void handleConnect() {
@@ -87,7 +88,7 @@ namespace mnet {
 
 	Q_SIGNALS:
 
-		void send_signal(SendItem message);
+		void send_signal(MsgPtr message);
 
 	protected:
 
@@ -97,24 +98,24 @@ namespace mnet {
 
 		virtual void requestNetworkId() {
 			if (isConnected()) {
-				send(std::shared_ptr<Message>(new IdCreateRequest()));
+				send(MsgPtr(new IdCreateRequest()));
 			}
 		}
 
-		virtual void handleMessage(std::shared_ptr<Message> uknMsg) {
+		virtual void handleMessage(MsgPtr msgBase) {
 			
-			if (uknMsg) {
+			if (msgBase) {
 
-				if (hasId() && uknMsg->getSenderId() == id())
+				if (hasId() && msgBase->getSenderId() == id())
 					return;
 
-				const Route * route = getRoute(uknMsg->getSenderId());
+				const Route * route = getRoute(msgBase->getSenderId());
 
-				if (CASE_TYPE(IdCreateReply, msg, uknMsg.get()))  {
+				if (CASE_TYPE(IdCreateReply, msg, msgBase.get()))  {
 					m_myId = msg->getCreatedId();
 					announce();
 				}
-				else if (CASE_TYPE(NodeAnnouncement, msg, uknMsg.get())) {
+				else if (CASE_TYPE(NodeAnnouncement, msg, msgBase.get())) {
 
 					if (!msg->hasSenderId()) {
 						qDebug() << "MNetClient: handleAnnounce: no senderId supplied";
@@ -125,7 +126,7 @@ namespace mnet {
 
 					handleAnnounce(*msg);
 				}
-				else if (CASE_TYPE(NodeDisconnect, msg, uknMsg.get())) {
+				else if (CASE_TYPE(NodeDisconnect, msg, msgBase.get())) {
 
 					if (!msg->hasDisconnectedNodeId()) {
 						qDebug() << "MNetClient: handleNodeDisconnect: no disconnectdId supplied";
@@ -137,7 +138,7 @@ namespace mnet {
 					handleNodeDisconnect(*msg);
 				}
 				else {
-					handleMessage(uknMsg, route);
+					handleMessage(msgBase, route);
 				}
 
 			}
@@ -155,7 +156,7 @@ namespace mnet {
 
 	protected Q_SLOTS:
 
-		virtual void send_slot(SendItem msg)  {
+		virtual void send_slot(MsgPtr msg)  {
 			
 			if (!msg)
 				return;

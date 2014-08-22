@@ -10,9 +10,9 @@ namespace mnet {
 
 	public:
 
-		ReconnectingWebSocket(const QString& url) : m_url(url), m_socket(url), m_toLive(true) {
-			m_socket.init(this);
-			reconnect();
+		ReconnectingWebSocket(const QString& url) : 
+			m_url(url),
+			m_socket(url, this) {
 		}
 
 		virtual ~ReconnectingWebSocket() {
@@ -39,9 +39,7 @@ namespace mnet {
 		* Called when connection is lost.
 		*/
 		virtual void onDisconnect() {
-			if (m_toLive) {
-				reconnect();
-			}
+			m_socket.reconnect();
 		}
 
 		/**
@@ -61,16 +59,10 @@ namespace mnet {
 		*/
 		virtual void onError(const QAbstractSocket::SocketError error) {
 		}
-		
-		void reconnect() {
-			qDebug() << "WebSocket: Connecting to " << m_url;
-			m_socket.reconnect();
-		}
-		
+				
 	private:
 		QString m_url;
 		WebSocket m_socket;
-		volatile bool m_toLive;
 
 	};
 
