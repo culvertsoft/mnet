@@ -11,7 +11,7 @@ namespace mnet {
 	public:
 
 		template <typename ReceiverType>
-		WebSocket(const QString& url, ReceiverType * receiver) : m_url(url) {
+		WebSocket(const std::string& url, ReceiverType * receiver) : m_url(QString(url.c_str())) {
 			connect(&m_webSocket, &QWebSocket::connected, receiver, &ReceiverType::onConnect);
 			connect(&m_webSocket, &QWebSocket::disconnected, receiver, &ReceiverType::onDisconnect);
 			connect(&m_webSocket, &QWebSocket::textMessageReceived, receiver, &ReceiverType::onTextMessage);

@@ -22,6 +22,7 @@ namespace mnet {
 	using se::culvertsoft::mnet::IdCreateRequest;
 	using se::culvertsoft::mnet::ClassRegistry;
 	using se::culvertsoft::mnet::IdCreateReply;
+	using se::culvertsoft::mnet::cppclient::ClientConfiguration;
 
 	class MNetClient : public ReconnectingWebSocket {
 		typedef ReconnectingWebSocket super;
@@ -30,7 +31,7 @@ namespace mnet {
 	public:
 		
 		MNetClient(
-			const QString& url,
+			const std::string& url,
 			const std::string& name = "unnamed_cpp_node",
 			const std::vector<std::string>& tags = std::vector<std::string>()) : 
 				ReconnectingWebSocket(url),
@@ -41,6 +42,10 @@ namespace mnet {
 			m_announceTimer.start(1000);
 			connect(this, &MNetClient::send_signal, this, &MNetClient::send_slot);
 			connect(&m_announceTimer, &QTimer::timeout, this, &MNetClient::announce);
+		}
+
+		MNetClient(const ClientConfiguration& cfg) :
+			MNetClient(cfg.getUrl(), cfg.getName(), cfg.getTags()) {
 		}
 
 		bool isConnected() const {

@@ -1,7 +1,9 @@
 <Module>
     <Types>
         <ClientConfiguration>
-            <url type="string" flags="required"/>
+            <url type="string">ws://localhost:80</url>
+            <name type="string">unnamed_mnet_cpp_node</name>
+            <tags type="list[string]">[]</tags>
         </ClientConfiguration>
     </Types>
 </Module>

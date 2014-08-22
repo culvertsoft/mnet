@@ -10,8 +10,8 @@ namespace mnet {
 
 	public:
 
-		ReconnectingWebSocket(const QString& url) : 
-			m_url(url),
+		ReconnectingWebSocket(const std::string& url) : 
+			m_url(url.c_str()),
 			m_socket(url, this) {
 		}
 

@@ -19,7 +19,7 @@ using namespace mnet;
 using se::culvertsoft::mnet::cppclient::ClientConfiguration;
 
 int main(int argc, char *argv[]) {
-
+	
 	QSharedPointer<QCoreApplication> app = ensureQtAppOrCreateNew(argc, argv);
 
 	const std::string cfgFileName = "../src/test/cfg/connect_settings.json";
@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
 		serializer.readJson<ClientConfiguration>(cfgFileData.data(), cfgFileData.size());
 	
 	QEventLoop eventLoop;
-	MNetClient client(cfg->getUrl().c_str());
+	MNetClient client(*cfg);
 	eventLoop.exec();
 	
 	return 0;
