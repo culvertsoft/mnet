@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include <mgen/serialization/VectorInputStream.h>
 #include <mgen/serialization/VectorOutputStream.h>
 #include <mgen/serialization/JsonReader.h>
