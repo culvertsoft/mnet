@@ -55,7 +55,7 @@ namespace mnet {
 			if (!isConnected())
 				return;
 
-			if (hasId())
+			if (hasId() && !msg.hasSenderId())
 				msg.setSenderId(id());
 
 			try {
