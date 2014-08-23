@@ -1,5 +1,6 @@
 #pragma once
 
+#include <mutex>
 #include <memory>
 #include <QtCore/QTimer>
 #include <se/culvertsoft/mnet/ClassRegistry.h>
@@ -9,7 +10,7 @@
 
 namespace mnet {
 
-	#define CASE_TYPE(T, varName, src) T * varName = dynamic_cast<T*>(src)
+#define CASE_TYPE(T, varName, src) T * varName = dynamic_cast<T*>(src)
 
 	typedef std::shared_ptr<se::culvertsoft::mnet::Message> MsgPtr;
 	using se::culvertsoft::mnet::NodeUUID;
@@ -25,17 +26,17 @@ namespace mnet {
 	class MNetClient : public ReconnectingWebSocket {
 		typedef ReconnectingWebSocket super;
 		Q_OBJECT
-		
+
 	public:
-		
+
 		MNetClient(
 			const std::string& url,
 			const std::string& name = "unnamed_cpp_node",
-			const std::vector<std::string>& tags = std::vector<std::string>()) : 
-				ReconnectingWebSocket(url),
-				m_connected(false),
-				m_name(name),
-				m_tags(tags) {
+			const std::vector<std::string>& tags = std::vector<std::string>()) :
+			ReconnectingWebSocket(url),
+			m_connected(false),
+			m_name(name),
+			m_tags(tags) {
 			m_announceTimer.start(1000);
 			connect(this, &MNetClient::send_signal_text, this, &MNetClient::send_slot_text);
 			connect(this, &MNetClient::send_signal_binary, this, &MNetClient::send_slot_binary);
@@ -49,7 +50,7 @@ namespace mnet {
 		bool isConnected() const {
 			return m_connected;
 		}
-		
+
 		void send(Message& msg) {
 
 			if (!isConnected())
@@ -77,12 +78,20 @@ namespace mnet {
 			}
 
 		}
-		
+
 		NodeUUID id() const {
 			return m_myId;
 		}
 
-	protected Q_SLOTS:
+		std::vector<Route> getRoutes() const {
+			std::lock_guard<std::recursive_mutex> lock(m_mutex);
+			std::vector<Route> out;
+			for (const auto& pair : m_routes)
+				out.push_back(pair.second);
+			return out;
+		}
+
+		protected Q_SLOTS:
 
 		virtual void announce() {
 			if (isConnected() && hasId()) {
@@ -131,7 +140,7 @@ namespace mnet {
 		}
 
 		virtual void handleMessage(MsgPtr msgBase) {
-			
+
 			if (msgBase) {
 
 				if (hasId() && msgBase->getSenderId() == id())
@@ -150,7 +159,10 @@ namespace mnet {
 						return;
 					}
 
-					m_routes[id2string(msg->getSenderId())] = Route(*msg);
+					{
+						std::lock_guard<std::recursive_mutex> lock(m_mutex);
+						m_routes[id2string(msg->getSenderId())] = Route(*msg);
+					}
 
 					handleAnnounce(*msg);
 				}
@@ -161,7 +173,10 @@ namespace mnet {
 						return;
 					}
 
-					m_routes.erase(id2string(msg->getDisconnectedNodeId()));
+					{
+						std::lock_guard<std::recursive_mutex> lock(m_mutex);
+						m_routes.erase(id2string(msg->getDisconnectedNodeId()));
+					}
 
 					handleNodeDisconnect(*msg);
 				}
@@ -182,7 +197,7 @@ namespace mnet {
 			return (it != m_routes.end()) ? &it->second : 0;
 		}
 
-	protected Q_SLOTS:
+		protected Q_SLOTS:
 
 		virtual void send_slot_text(QString data) {
 			sendTextMessage(data);
@@ -191,8 +206,8 @@ namespace mnet {
 		virtual void send_slot_binary(QByteArray data) {
 			sendBinaryMessage(data);
 		}
-		
-		
+
+
 	private:
 
 		/**
@@ -217,7 +232,10 @@ namespace mnet {
 		void onDisconnect() override {
 			super::onDisconnect();
 			m_connected = false;
-			m_routes.clear();
+			{
+				std::lock_guard<std::recursive_mutex> lock(m_mutex);
+				m_routes.clear();
+			}
 			handleDisconnect();
 		}
 
@@ -264,7 +282,7 @@ namespace mnet {
 		std::string id2string(const NodeUUID& id) const {
 			return std::to_string(id.getLsb()).append(std::to_string(id.getMsb()));
 		}
-		
+
 		// Fields
 		NodeUUID m_myId;
 		volatile bool m_connected;
@@ -273,6 +291,7 @@ namespace mnet {
 		std::string m_name;
 		std::vector<std::string> m_tags;
 		QTimer m_announceTimer;
+		mutable std::recursive_mutex m_mutex;
 
 	};
 
