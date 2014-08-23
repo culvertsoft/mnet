@@ -6,6 +6,7 @@ namespace mnet {
 
 	class Route {
 		typedef se::culvertsoft::mnet::NodeAnnouncement NodeAnnouncement;
+		typedef se::culvertsoft::mnet::NodeUUID NodeUUID;
 
 	public:
 		Route() {
@@ -18,6 +19,10 @@ namespace mnet {
 
 		const NodeAnnouncement& details() const {
 			return m_details;
+		}
+		
+		const NodeUUID& id() const {
+			return m_details.getSenderId();
 		}
 
 		const std::string& name() const {
