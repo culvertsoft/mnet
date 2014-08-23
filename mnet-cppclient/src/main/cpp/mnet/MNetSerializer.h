@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <se/culvertsoft/mnet/Message.h>
 
 #include <mgen/serialization/VectorInputStream.h>
 #include <mgen/serialization/VectorOutputStream.h>
