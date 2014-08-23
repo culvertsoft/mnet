@@ -297,7 +297,7 @@ namespace mnet {
 		}
 
 		std::string id2string(const NodeUUID& id) const {
-			return std::to_string(id.getLsb()).append(std::to_string(id.getMsb()));
+			return std::to_string(id.getLsb()) + std::to_string(id.getMsb());
 		}
 
 		// Fields
