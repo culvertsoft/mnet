@@ -51,6 +51,26 @@ namespace mnet {
 			return m_connected;
 		}
 
+		void sendBinary(const char * data, const int n, const NodeUUID& tgt) {
+			send(DataMessage().setTargetId(tgt).setBinaryData(std::vector<char>(data, data + n)));
+		}
+
+		void sendBinary(const std::vector<char>& data, const NodeUUID& tgt) {
+			send(DataMessage().setTargetId(tgt).setBinaryData(data));
+		}
+
+		void sendText(const char * data, const int n, const NodeUUID& tgt) {
+			send(DataMessage().setTargetId(tgt).setStringData(std::string(data, n)));
+		}
+
+		void sendText(const std::vector<char>& data, const NodeUUID& tgt) {
+			send(DataMessage().setTargetId(tgt).setStringData(std::string(data.data(), data.size())));
+		}
+
+		void sendText(const std::string& data, const NodeUUID& tgt) {
+			send(DataMessage().setTargetId(tgt).setStringData(data));
+		}
+
 		void send(Message& msg) {
 
 			if (!isConnected())
