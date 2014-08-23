@@ -7,8 +7,6 @@
 #include "MNetSerializer.h"
 #include "Route.h"
 
-Q_DECLARE_METATYPE(std::shared_ptr<se::culvertsoft::mnet::Message>);
-
 namespace mnet {
 
 	#define CASE_TYPE(T, varName, src) T * varName = dynamic_cast<T*>(src)
@@ -38,9 +36,9 @@ namespace mnet {
 				m_connected(false),
 				m_name(name),
 				m_tags(tags) {
-			qRegisterMetaType<MsgPtr>("MsgPtr");
 			m_announceTimer.start(1000);
-			connect(this, &MNetClient::send_signal, this, &MNetClient::send_slot);
+			connect(this, &MNetClient::send_signal_text, this, &MNetClient::send_slot_text);
+			connect(this, &MNetClient::send_signal_binary, this, &MNetClient::send_slot_binary);
 			connect(&m_announceTimer, &QTimer::timeout, this, &MNetClient::announce);
 		}
 
@@ -52,8 +50,32 @@ namespace mnet {
 			return m_connected;
 		}
 		
-		void send(MsgPtr message) {
-			Q_EMIT send_signal(message);
+		void send(Message& msg) {
+
+			if (!isConnected())
+				return;
+
+			if (hasId())
+				msg.setSenderId(id());
+
+			try {
+
+				if (CASE_TYPE(const DataMessage, dataMsg, &msg)) {
+					if (dataMsg->hasBinaryData()) {
+						const std::vector<char>& data = m_serializer.writeBinary(*dataMsg);
+						Q_EMIT send_signal_binary(QByteArray(data.data(), data.size()));
+						return;
+					}
+				}
+
+				const std::vector<char>& data = m_serializer.writeJson(msg);
+				Q_EMIT send_signal_text(QString::fromUtf8(data.data(), data.size()));
+
+			}
+			catch (const mgen::Exception& e) {
+				qDebug() << "MNetClient:send: exception: " << e.what();
+			}
+
 		}
 		
 		NodeUUID id() const {
@@ -64,10 +86,10 @@ namespace mnet {
 
 		virtual void announce() {
 			if (isConnected() && hasId()) {
-				send(MsgPtr(&(new NodeAnnouncement)
-					->setSenderId(id())
+				send(NodeAnnouncement()
+					.setSenderId(id())
 					.setName(m_name)
-					.setTags(m_tags)));
+					.setTags(m_tags));
 			}
 		}
 
@@ -93,7 +115,8 @@ namespace mnet {
 
 	Q_SIGNALS:
 
-		void send_signal(MsgPtr message);
+		void send_signal_text(QString data);
+		void send_signal_binary(QByteArray data);
 
 	protected:
 
@@ -103,7 +126,7 @@ namespace mnet {
 
 		virtual void requestNetworkId() {
 			if (isConnected()) {
-				send(MsgPtr(new IdCreateRequest()));
+				send(IdCreateRequest());
 			}
 		}
 
@@ -161,41 +184,14 @@ namespace mnet {
 
 	protected Q_SLOTS:
 
-		virtual void send_slot(MsgPtr msg)  {
-			
-			if (!msg)
-				return;
-			
-			if (!isConnected())
-				return;
-
-			if (hasId())
-				msg->setSenderId(id());
-			
-			try {
-
-				if (CASE_TYPE(DataMessage, dataMsg, msg.get())) {
-
-					if (dataMsg->hasBinaryData()) {
-						const std::vector<char>& data = m_serializer.writeBinary(*dataMsg);
-						sendBinaryMessage(QByteArray(data.data(), data.size()));
-					}
-					else {
-						const std::vector<char>& data = m_serializer.writeJson(*dataMsg);
-						sendTextMessage(QString::fromUtf8(data.data(), data.size()));
-					}
-
-				}
-				else {
-					const std::vector<char>& data = m_serializer.writeJson(*msg);
-					sendTextMessage(QString::fromUtf8(data.data(), data.size()));
-				}
-			}
-			catch (const mgen::Exception& e) {
-				qDebug() << "MNetClient:send_slot: exception: " << e.what();
-			}
+		virtual void send_slot_text(QString data) {
+			sendTextMessage(data);
 		}
 
+		virtual void send_slot_binary(QByteArray data) {
+			sendBinaryMessage(data);
+		}
+		
 		
 	private:
 
