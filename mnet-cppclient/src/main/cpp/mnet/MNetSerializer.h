@@ -22,7 +22,7 @@ namespace mnet {
 			m_inputStream(m_inputBuffer),
 			m_outputStream(m_outputBuffer),
 			m_jsonReader(m_inputStream, m_classRegistry),
-			m_jsonWriter(m_outputStream, m_classRegistry),
+			m_jsonWriter(m_outputStream, m_classRegistry, true),
 			m_binaryReader(m_inputStream, m_classRegistry),
 			m_binaryWriter(m_outputStream, m_classRegistry) {
 
