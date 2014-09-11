@@ -12,9 +12,8 @@ MNet can be seen as a follow-up and sister product of [mgen](https://github.com/
 MNet will have NO requirements for you to use MGen as the data format, as they are two completely separate projects.
 
 Building MNet is a mess right now (so don't do it! Wait at least until beta release):
-  * Build MGen so sbt publishes the mgen jars to your local ivy reposityro
-  * Use the MGen installer script (in mgen/mgen-installers/) and set the required environmental variables
-  * call 'python build.py -b' in your checked out MNet repo
+  * Install MGen (follow the instructions at [culvertsoft.github.io/mgen](http://culvertsoft.github.io/mgen/))
+  * Execute 'python build.py -b' in your checked out MNet repo
 
 The c++ library is header-only, but to build the c++ tests, you currently have to do this manually, there's a CMakeLists.txt available.
 
