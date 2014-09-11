@@ -20,6 +20,7 @@ project/plugins/project/
 
 #generated code
 src_generated/
+cpp_generated/
 data_generator/
 data_generated/
 
