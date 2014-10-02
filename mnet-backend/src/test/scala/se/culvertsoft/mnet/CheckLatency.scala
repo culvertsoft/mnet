@@ -18,10 +18,10 @@ class CheckLatency {
   def latencyCheck() {
 
     val b1Msgs = new ConcurrentLinkedQueue[Message]
-    val b2Msgs = new ArrayBuffer[Message]
+    val b2Msgs = new ConcurrentLinkedQueue[Message]
 
     val b1 = TestUtils.newNode(1500)(b1Msgs.add(_)).start()
-    val b2 = TestUtils.newNode(1501)(b2Msgs += _).start()
+    val b2 = TestUtils.newNode(1501)(b2Msgs.add(_)).start()
 
     val ws1 = b1.getBackEnd[WebSockBackEnd]
     val ws2 = b2.getBackEnd[WebSockBackEnd]

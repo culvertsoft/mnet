@@ -10,6 +10,7 @@ isSnapshot := version.value.contains("SNAPSHOT")
 
 resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
+parallelExecution in Test := false
 
 publishMavenStyle := true
 
