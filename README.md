@@ -1,20 +1,16 @@
 MNet
 ====
 
-WARNING: This project is in its infant stage and is not yet intended to be used, not even for testing/evaluation! Release is scheduled to be some time after our sister project [mgen](https://github.com/culvertsoft/mgen).
+WARNING: This project is in very early development and is not intended for public testing/evaluation!
 
-MNet will be a data format-, transport layer- and programming language agnostic software network infrastructure provider. A default transport layer implemenation will be written using websockets. Websockets are selected for their simple message-based API as well as having a standard that may be leveraged from virtually any programming language and platform.
+MNet might turn into something like a data format-, transport layer- and programming language agnostic communication library. An experimental scala+Cpp-implementation exists today based on websockets. Websockets are selected for their simple message-based API as well as having a standard that may be leveraged from virtually any programming language and platform.
 
-MNet will allow you to connect applications to a persistent network of nodes, where you may announce services as well as send custom messages (byte arrays and/or strings) to all of or a subset of known nodes. It can also be used a simple server-client skeleton for you to manage, for example for game servers and similar applications.
+The vision is to easily be able to connect applications to your own persistent network of nodes, where you may announce services as well as send custom messages (byte arrays and/or strings) to all of or a subset of known nodes. It can also be used a simple server-client skeleton for you to manage, for example for game servers and similar applications.
 
-MNet can be seen as a follow-up and sister product of [mgen](https://github.com/culvertsoft/mgen), and will follow MGen's dual licensing model of GPLv2 + a future license that is more commercially compatible.
-
-MNet will have NO requirements for you to use MGen as the data format, as they are two completely separate projects.
+MNet can be seen as a follow-up of [mgen](https://github.com/culvertsoft/mgen), but MNet will have NO requirements for you to use MGen as the data format.
 
 Building MNet is a mess right now (so don't do it! Wait at least until beta release):
   * Install MGen (follow the instructions at [culvertsoft.github.io/mgen](http://culvertsoft.github.io/mgen/))
   * Execute 'python build.py -b' in your checked out MNet repo
 
-The c++ library is header-only, but to build the c++ tests, you currently have to do this manually, there's a CMakeLists.txt available.
-
-Like MGen, MNet is available from oss sonatype professional.
+For now MNet is available here under GPLv2, but eventually it will probably be released with an MIT license (like MGen).
