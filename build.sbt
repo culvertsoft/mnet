@@ -9,7 +9,7 @@ resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repos
 
 version := scala.util.Properties.envOrElse("MNET_BUILD_VERSION", "SNAPSHOT")
 
-scalaVersion := "2.11.4"
+scalaVersion := "2.11.5"
 
 isSnapshot := version.value.contains("SNAPSHOT")
 
